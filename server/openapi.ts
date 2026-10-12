@@ -66,6 +66,28 @@ const openapiDocument = {
           }
         }
       }
+    },
+    '/api/scenarios': {
+      get: {
+        tags: ['Simulación'],
+        summary: 'Obtiene los escenarios disponibles',
+        responses: { '200': { description: 'Catálogo de escenarios' } }
+      }
+    },
+    '/api/scenario-status': {
+      get: {
+        tags: ['Simulación'],
+        summary: 'Obtiene el progreso del escenario activo',
+        responses: { '200': { description: 'Estado de ejecución del escenario' } }
+      }
+    },
+    '/api/scenarios/{id}/start': {
+      post: {
+        tags: ['Simulación'],
+        summary: 'Inicia un escenario',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': { description: 'Escenario iniciado' }, '404': { description: 'Escenario inexistente' } }
+      }
     }
   },
   components: {
@@ -111,6 +133,25 @@ const openapiDocument = {
           noiseLevel: { type: 'number', example: 45 },
           nearbyPeople: { type: 'integer', example: 0 },
           pulse: { type: 'number', example: 60 }
+        }
+      },
+      ValueRange: {
+        type: 'object',
+        required: ['minimum', 'maximum'],
+        properties: { minimum: { type: 'number' }, maximum: { type: 'number' } }
+      },
+      Scenario: {
+        type: 'object',
+        required: ['id', 'name', 'description', 'durationSeconds', 'stages', 'finalValues', 'sequenceImages'],
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          durationSeconds: { type: 'integer' },
+          stages: { type: 'array', items: { type: 'object' } },
+          finalValues: { type: 'object' },
+          previewImage: { type: 'string' },
+          sequenceImages: { type: 'array', items: { type: 'string' } }
         }
       }
     }

@@ -1,20 +1,29 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import CellphonePanel from './components/CellphonePanel.vue';
 import SensorPanel from './components/SensorPanel.vue';
 import HistoryChart from './components/HistoryChart.vue';
-import type { BridgeState, HistoryPoint } from './types';
+import ScenarioPanel from './components/ScenarioPanel.vue';
+import type { BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types';
 
 const state = ref<BridgeState | null>(null);
 const history = ref<HistoryPoint[]>([]);
+const scenarios = ref<Scenario[]>([]);
+const scenarioStatus = ref<ScenarioStatus>({ scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false });
+const scenarioLoading = ref(false);
+let refreshTimer: ReturnType<typeof setInterval> | undefined;
 async function fetchAll() {
   try {
-    const [s, h] = await Promise.all([
+    const [s, h, status, availableScenarios] = await Promise.all([
       fetch('/api/get-data').then(r => r.json()),
       fetch('/api/history').then(r => r.json())
+      , fetch('/api/scenario-status').then(r => r.json())
+      , fetch('/api/scenarios').then(r => r.json())
     ]);
     state.value = s;
     history.value = h;
+    scenarioStatus.value = status;
+    scenarios.value = availableScenarios;
   } catch (e) {
     console.error('Bridge no disponible', e);
   }
@@ -22,7 +31,22 @@ async function fetchAll() {
 
 onMounted(() => {
   fetchAll();
+  refreshTimer = setInterval(fetchAll, 1000);
 });
+onUnmounted(() => { if (refreshTimer) clearInterval(refreshTimer); });
+
+async function startScenario(id: string) {
+  scenarioLoading.value = true;
+  try {
+    const response = await fetch(`/api/scenarios/${id}/start`, { method: 'POST' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    scenarioStatus.value = await response.json();
+  } catch (e) {
+    console.error('No se pudo iniciar el escenario', e);
+  } finally {
+    scenarioLoading.value = false;
+  }
+}
 async function updateState(patch: Partial<BridgeState>) {
   if (!state.value) return;
   const nextState = {
@@ -56,6 +80,7 @@ async function updateState(patch: Partial<BridgeState>) {
     </header>
 
     <main class="grid">
+      <ScenarioPanel :scenarios="scenarios" :status="scenarioStatus" :loading="scenarioLoading" @start="startScenario" />
       <CellphonePanel :data="state?.cellphone ?? null" @update="updateState" />
       <SensorPanel :data="state?.sensor ?? null" @update="updateState" />
       <HistoryChart :history="history" />

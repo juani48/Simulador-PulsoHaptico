@@ -19,6 +19,59 @@ La aplicacion queda disponible en `http://localhost:5173`.
 
 Tambien se puede usar `make dev`. En este modo, Vite sirve la interfaz y el servidor Express se ejecuta por separado.
 
+## Estructura del proyecto
+
+La aplicacion esta dividida en una interfaz Vue y un servidor Express. Cada capa tiene una responsabilidad concreta para que los cambios puedan hacerse en el archivo adecuado.
+
+### Archivos principales
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `package.json` | Dependencias y comandos de desarrollo, build, test y produccion. |
+| `vite.config.ts` | Configuracion de Vite para la interfaz Vue. |
+| `tsconfig.json` | Configuracion de TypeScript para el cliente. |
+| `tsconfig.server.json` | Configuracion de TypeScript para compilar `server/` en `dist-server/`. |
+| `index.html` | Documento HTML base donde Vue monta la aplicacion. |
+| `Makefile` | Atajos para desarrollo, Docker, logs, estado y tunel ngrok. |
+| `Dockerfile` | Imagen del servicio de la aplicacion. |
+| `docker-compose.yml` | Servicios y redes usadas para levantar la aplicacion y servicios auxiliares. |
+| `README.md` | Documentacion de uso, API y mantenimiento del proyecto. |
+
+### Cliente (`src/`)
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `src/main.ts` | Punto de entrada de Vue; monta `App.vue` y carga los estilos globales. |
+| `src/App.vue` | Coordina el estado de la pantalla, consulta la API y actualiza el simulador. |
+| `src/types.ts` | Tipos compartidos por los componentes del cliente. Deben mantenerse alineados con `server/types.ts`. |
+| `src/style.css` | Variables visuales, estilos globales y estilos reutilizables. |
+| `src/components/CellphonePanel.vue` | Edicion y visualizacion de posicion, ruido, fecha y personas cercanas. |
+| `src/components/SensorPanel.vue` | Edicion y visualizacion del pulso del sensor. |
+| `src/components/HistoryChart.vue` | Grafico historico usando Chart.js. |
+
+### Servidor (`server/`)
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `server/index.ts` | Punto de entrada del proceso Node. Crea la aplicacion y comienza a escuchar el puerto configurado. |
+| `server/config.ts` | Carga variables de entorno y centraliza configuracion del servidor y ruta de `dist/`. |
+| `server/app.ts` | Construye Express, registra CORS, JSON, rutas API y archivos estaticos. |
+| `server/routes.ts` | Define endpoints de datos, historial, OpenAPI y Swagger UI. |
+| `server/simulator.ts` | Mantiene el estado simulado y el historial de hasta 60 mediciones. |
+| `server/types.ts` | Contratos de datos del servidor: estado del bridge y puntos historicos. |
+| `server/openapi.ts` | Especificacion OpenAPI que alimenta `/openapi.json` y Swagger UI. |
+
+El flujo de arranque del servidor es: `index.ts` crea la aplicacion con `app.ts`; `app.ts` registra el router de `routes.ts`; las rutas consultan `simulator.ts`; los contratos usados por el servidor viven en `types.ts`.
+
+### Donde hacer cambios
+
+- Para agregar o modificar un endpoint, edita `server/routes.ts` y actualiza `server/openapi.ts`.
+- Para cambiar el estado inicial, el limite del historial o la logica de simulacion, edita `server/simulator.ts`.
+- Para cambiar la forma de los datos, actualiza `server/types.ts` y `src/types.ts`, y revisa los componentes que los consumen.
+- Para cambiar CORS, puerto o rutas de produccion, edita `server/config.ts`.
+- Para cambiar la interfaz o sus consultas, edita `src/App.vue` o el componente correspondiente.
+- Para cambiar colores y estilos compartidos, edita `src/style.css`; los estilos especificos permanecen en cada componente.
+
 ## Produccion local
 
 ```bash

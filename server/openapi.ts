@@ -92,22 +92,12 @@ const openapiDocument = {
   },
   components: {
     schemas: {
-      Position: {
-        type: 'object',
-        required: ['lat', 'lon'],
-        properties: {
-          lat: { type: 'number', format: 'double', example: -34.6118 },
-          lon: { type: 'number', format: 'double', example: -58.4173 }
-        }
-      },
       CellphoneData: {
         type: 'object',
-        required: ['position', 'noiseLevel', 'dateTime', 'nearbyPeople'],
+        required: ['noiseLevel', 'dateTime'],
         properties: {
-          position: { $ref: '#/components/schemas/Position' },
           noiseLevel: { type: 'number', example: 45 },
-          dateTime: { type: 'string', format: 'date-time' },
-          nearbyPeople: { type: 'integer', example: 0 }
+          dateTime: { type: 'string', format: 'date-time' }
         }
       },
       SensorData: {
@@ -127,11 +117,10 @@ const openapiDocument = {
       },
       HistoryPoint: {
         type: 'object',
-        required: ['t', 'noiseLevel', 'nearbyPeople', 'pulse'],
+        required: ['t', 'noiseLevel', 'pulse'],
         properties: {
           t: { type: 'string', format: 'date-time' },
           noiseLevel: { type: 'number', example: 45 },
-          nearbyPeople: { type: 'integer', example: 0 },
           pulse: { type: 'number', example: 60 }
         }
       },

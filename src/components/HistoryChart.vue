@@ -30,13 +30,6 @@ const chartData = computed(() => ({
       backgroundColor: 'rgba(78,163,255,.12)',
       tension: .35, fill: true, pointRadius: 0
     },
-    {
-      label: 'Personas cercanas',
-      data: props.history.map(p => p.nearbyPeople),
-      borderColor: '#52e2a6',
-      backgroundColor: 'rgba(82,226,166,.10)',
-      tension: .35, fill: true, pointRadius: 0
-    }
   ]
 }));
 
@@ -56,8 +49,8 @@ const chartOptions = {
 </script>
 
 <template>
-  <section class="card">
-    <div class="title">History · Parámetros en el tiempo</div>
+  <section class="card chart-card">
+    <div class="title">Historial · Parámetros en el tiempo</div>
     <div class="chart-wrap">
       <Line :data="chartData" :options="chartOptions" />
     </div>
@@ -65,6 +58,7 @@ const chartOptions = {
 </template>
 
 <style scoped>
+.chart-card { height: 398px; display: flex; flex-direction: column; }
 .title { margin-bottom: 12px; }
-.chart-wrap { height: 320px; }
+.chart-wrap { height: 320px; flex: none; }
 </style>

@@ -11,6 +11,8 @@ const history = ref<HistoryPoint[]>([]);
 const scenarios = ref<Scenario[]>([]);
 const scenarioStatus = ref<ScenarioStatus>({ scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false });
 const scenarioLoading = ref(false);
+const carousel = ref<HTMLElement | null>(null);
+const carouselIndex = ref(0);
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 async function fetchAll() {
   try {
@@ -70,20 +72,67 @@ async function updateState(patch: Partial<BridgeState>) {
     console.error('No se pudo actualizar el simulador', e);
   }
 }
+
+function goToCarousel(index: number) {
+  const nextIndex = Math.max(0, Math.min(index, 1));
+  const element = carousel.value;
+  if (!element) return;
+
+  carouselIndex.value = nextIndex;
+  element.scrollTo({
+    left: nextIndex * (element.clientWidth + 18),
+    behavior: 'smooth'
+  });
+}
 </script>
 
 <template>
   <div class="app">
     <header class="header">
-      <h1>CONTEXT SIMULATOR</h1>
+      <h1>SIMULADOR DE CONTEXTO</h1>
       <span class="dot" :class="{ live: !!state }" />
     </header>
 
     <main class="grid">
-      <ScenarioPanel :scenarios="scenarios" :status="scenarioStatus" :loading="scenarioLoading" @start="startScenario" />
-      <CellphonePanel :data="state?.cellphone ?? null" @update="updateState" />
-      <SensorPanel :data="state?.sensor ?? null" @update="updateState" />
       <HistoryChart :history="history" />
+      <div class="carousel-shell">
+        <div ref="carousel" class="carousel" aria-label="Controles de simulación">
+        <div class="carousel-item">
+          <ScenarioPanel :scenarios="scenarios" :status="scenarioStatus" :loading="scenarioLoading" @start="startScenario" />
+        </div>
+        <div class="carousel-item data-item">
+          <CellphonePanel :data="state?.cellphone ?? null" @update="updateState" />
+          <SensorPanel :data="state?.sensor ?? null" @update="updateState" />
+        </div>
+        </div>
+        <div class="carousel-controls">
+          <button
+            class="carousel-button"
+            type="button"
+            aria-label="Ver escenarios"
+            :class="{ active: carouselIndex === 0 }"
+            :disabled="carouselIndex === 0"
+            @click="goToCarousel(0)"
+          >
+            <span aria-hidden="true">←</span>
+            <span>Escenarios</span>
+          </button>
+          <div class="carousel-dots" aria-hidden="true">
+            <span v-for="index in 2" :key="index" class="carousel-dot" :class="{ active: carouselIndex === index - 1 }" />
+          </div>
+          <button
+            class="carousel-button"
+            type="button"
+            aria-label="Ver datos simulados"
+            :class="{ active: carouselIndex === 1 }"
+            :disabled="carouselIndex === 1"
+            @click="goToCarousel(1)"
+          >
+            <span>Datos simulados</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -108,11 +157,84 @@ async function updateState(patch: Partial<BridgeState>) {
 .grid {
   display: grid;
   gap: 18px;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
 }
-.grid > :last-child { grid-column: 1 / -1; }
+.carousel-shell {
+  width: 100%;
+  min-width: 0;
+  height: 398px;
+}
+.carousel {
+  display: flex;
+  gap: 18px;
+  height: calc(100% - 42px);
+  min-width: 0;
+  overflow: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  scroll-behavior: smooth;
+}
+.carousel-item {
+  flex: 0 0 100%;
+  height: 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px auto 0;
+  max-width: 440px;
+}
+.carousel-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 13px;
+  color: var(--muted);
+  background: rgba(19, 26, 46, .8);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s, transform .2s;
+}
+.carousel-button:not(:disabled):hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(78, 163, 255, .12);
+  transform: translateY(-1px);
+}
+.carousel-button:disabled {
+  color: var(--text);
+  border-color: var(--accent-2);
+  background: rgba(82, 226, 166, .1);
+  cursor: default;
+}
+.carousel-dots { display: flex; gap: 6px; }
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background .2s, transform .2s;
+}
+.carousel-dot.active {
+  background: var(--accent-2);
+  transform: scale(1.25);
+}
+.data-item {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
 
 @media (max-width: 780px) {
-  .grid { grid-template-columns: 1fr; }
+  .data-item { grid-template-columns: 1fr; }
+  .carousel-button { padding: 8px 10px; }
 }
 </style>

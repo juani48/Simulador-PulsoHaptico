@@ -46,7 +46,7 @@ La aplicacion esta dividida en una interfaz Vue y un servidor Express. Cada capa
 | `src/App.vue` | Coordina el estado de la pantalla, consulta la API y actualiza el simulador. |
 | `src/types.ts` | Tipos compartidos por los componentes del cliente. Deben mantenerse alineados con `server/types.ts`. |
 | `src/style.css` | Variables visuales, estilos globales y estilos reutilizables. |
-| `src/components/CellphonePanel.vue` | Edicion y visualizacion de posicion, ruido, fecha y personas cercanas. |
+| `src/components/CellphonePanel.vue` | Edicion y visualizacion del ruido y la fecha. |
 | `src/components/SensorPanel.vue` | Edicion y visualizacion del pulso del sensor. |
 | `src/components/HistoryChart.vue` | Grafico historico usando Chart.js. |
 | `src/components/ScenarioPanel.vue` | Seleccion, ejecucion, progreso e imagenes de escenarios. |
@@ -130,8 +130,8 @@ define el estado exacto que queda al terminar. `previewImage` y `sequenceImages`
 son opcionales y permiten agregar una vista previa y una secuencia de imagenes;
 durante la ejecucion las imagenes de la secuencia se muestran en el orden cargado.
 
-Los valores que actualmente pueden simularse en un escenario son `noiseLevel`,
-`pulse` y `nearbyPeople`. Una actualización manual mediante `PUT /api/data`
+Los valores que actualmente pueden simularse en un escenario son `noiseLevel`
+y `pulse`. Una actualización manual mediante `PUT /api/data`
 detiene el escenario activo.
 
 La especificacion completa se puede explorar en Swagger UI.

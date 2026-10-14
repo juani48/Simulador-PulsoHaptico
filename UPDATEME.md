@@ -69,7 +69,6 @@ Ejemplo:
 - Los valores aceptados actualmente son:
   - `noiseLevel`: ruido ambiente.
   - `pulse`: pulso en BPM.
-  - `nearbyPeople`: personas cercanas.
 
 Si se agrega un nuevo valor simulado, hay que actualizar todos los puntos indicados
 en [Agregar un nuevo valor simulado](#agregar-un-nuevo-valor-simulado).

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Scenario, ScenarioStatus } from '../types';
+import type { Scenario, ScenarioStatus, ScenarioValue } from '../types';
 
 const props = defineProps<{
   scenarios: Scenario[];
@@ -18,11 +18,31 @@ const activeSequenceImage = computed(() => {
   const position = props.status.elapsedSeconds / props.status.totalSeconds;
   return sequence[Math.min(Math.floor(position * sequence.length), sequence.length - 1)];
 });
+const valueLabels: Record<ScenarioValue, string> = {
+  noiseLevel: 'Ruido',
+  pulse: 'Pulso'
+};
+const valueUnits: Record<ScenarioValue, string> = {
+  noiseLevel: 'dB',
+  pulse: 'BPM'
+};
+function scenarioValues(scenario: Scenario) {
+  const values = new Map<ScenarioValue, { minimum: number; maximum: number }>();
+  for (const stage of scenario.stages) {
+    for (const [key, range] of Object.entries(stage.values) as [ScenarioValue, { minimum: number; maximum: number }][]) {
+      const current = values.get(key);
+      values.set(key, current
+        ? { minimum: Math.min(current.minimum, range.minimum), maximum: Math.max(current.maximum, range.maximum) }
+        : range);
+    }
+  }
+  return [...values.entries()];
+}
 </script>
 
 <template>
   <section class="card scenario-card">
-    <div class="title">Scenarios · Simulación guiada</div>
+    <div class="title">Escenarios · Simulación guiada</div>
     <div v-if="!scenarios.length" class="empty">No hay escenarios disponibles.</div>
     <div v-else class="scenario-list">
       <article v-for="scenario in scenarios" :key="scenario.id" class="scenario">
@@ -36,6 +56,12 @@ const activeSequenceImage = computed(() => {
             <span>{{ scenario.durationSeconds }} s</span>
           </div>
           <p>{{ scenario.description }}</p>
+          <div class="values-title">Valores a simular</div>
+          <div class="values">
+            <span v-for="[key, range] in scenarioValues(scenario)" :key="key" class="value-chip">
+              {{ valueLabels[key] }}: {{ range.minimum }}–{{ range.maximum }} {{ valueUnits[key] }}
+            </span>
+          </div>
           <div v-if="scenario.sequenceImages.length" class="sequence">
             {{ scenario.sequenceImages.length }} imágenes en secuencia
           </div>
@@ -63,16 +89,19 @@ const activeSequenceImage = computed(() => {
 </template>
 
 <style scoped>
-.scenario-card { grid-column: 1 / -1; }
-.scenario-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.scenario { display: flex; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.scenario-card { height: 100%; }
+.scenario-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-content: start; gap: 12px; padding: 2px; }
+.scenario { display: flex; min-width: 0; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
 .scenario-preview { display: grid; place-items: center; flex: 0 0 105px; min-height: 90px; border-radius: 8px; background: #0e1428; color: var(--muted); font-size: 11px; text-align: center; }
 .scenario-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
 .scenario-content { flex: 1; }
 .scenario-heading, .progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 h2 { margin: 0; font-size: 17px; }
-.scenario-heading span, .sequence { color: var(--muted); font-size: 12px; }
+.scenario-heading span, .sequence, .values-title { color: var(--muted); font-size: 12px; }
 p { margin: 7px 0 12px; color: var(--muted); font-size: 13px; }
+.values-title { margin-bottom: 5px; }
+.values { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.value-chip { padding: 4px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); font-size: 11px; }
 .scenario-button { border: 0; border-radius: 7px; padding: 8px 12px; color: #07101d; background: var(--accent-2); font-weight: 700; cursor: pointer; }
 .scenario-button:disabled { opacity: .5; cursor: not-allowed; }
 .progress { margin-top: 16px; color: var(--muted); font-size: 12px; }
@@ -80,5 +109,5 @@ p { margin: 7px 0 12px; color: var(--muted); font-size: 13px; }
 .progress-value { height: 100%; border-radius: inherit; background: var(--accent-2); transition: width .3s; }
 .active-sequence-image { width: 100%; max-height: 150px; margin-bottom: 10px; border-radius: 8px; object-fit: cover; }
 .empty { color: var(--muted); }
-@media (max-width: 780px) { .scenario-list { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .scenario-list { grid-template-columns: 1fr; } .scenario { flex-direction: column; } .scenario-preview { flex-basis: 80px; } }
 </style>

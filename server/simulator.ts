@@ -1,7 +1,6 @@
 import type { BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types.js';
 
 const MAX_HISTORY = 60;
-const CENTER = { lat: -34.6118, lon: -58.4173 };
 
 class Simulator {
   private state!: BridgeState;
@@ -19,10 +18,8 @@ class Simulator {
   private initialState(): BridgeState {
     return {
       cellphone: {
-        position: { ...CENTER },
         noiseLevel: 45,
-        dateTime: new Date().toISOString(),
-        nearbyPeople: 0
+        dateTime: new Date().toISOString()
       },
       sensor: { pulse: 60 }
     };
@@ -32,7 +29,6 @@ class Simulator {
     return {
       t: s.cellphone.dateTime,
       noiseLevel: s.cellphone.noiseLevel,
-      nearbyPeople: s.cellphone.nearbyPeople,
       pulse: s.sensor.pulse
     };
   }
@@ -102,7 +98,7 @@ class Simulator {
     const nextState = structuredClone(this.state);
     for (const [key, range] of Object.entries(stage.values)) {
       const value = this.randomValue(range.minimum, range.maximum);
-      if (key === 'noiseLevel' || key === 'nearbyPeople') nextState.cellphone[key] = value;
+      if (key === 'noiseLevel') nextState.cellphone.noiseLevel = value;
       if (key === 'pulse') nextState.sensor.pulse = value;
     }
     nextState.cellphone.dateTime = new Date().toISOString();
@@ -114,7 +110,7 @@ class Simulator {
     const nextState = structuredClone(this.state);
     for (const [key, value] of Object.entries(scenario.finalValues)) {
       if (key === 'pulse') nextState.sensor.pulse = value;
-      if (key === 'noiseLevel' || key === 'nearbyPeople') nextState.cellphone[key] = value;
+      if (key === 'noiseLevel') nextState.cellphone.noiseLevel = value;
     }
     nextState.cellphone.dateTime = new Date().toISOString();
     this.state = nextState;

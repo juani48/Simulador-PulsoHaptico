@@ -1,6 +1,6 @@
 # Pulso Háptico Vue
 
-Simulador de contexto que muestra datos de un teléfono y un sensor de pulso, junto con el historial de mediciones. La interfaz Vue consulta el bridge cada segundo y permite ejecutar escenarios temporales de regulación y desregulación. El proyecto incluye una API Express, documentación Swagger y un túnel opcional con ngrok.
+Simulador de contexto que muestra datos de un teléfono, un sensor de pulso y la batería social, junto con el historial de mediciones. La interfaz Vue consulta el bridge cada segundo y permite ejecutar escenarios temporales de regulación y desregulación. El proyecto incluye una API Express, documentación Swagger y un túnel opcional con ngrok.
 
 ## Requisitos
 
@@ -120,6 +120,7 @@ La API expone estos endpoints:
 | `GET` | `/api/get-data` | Obtiene el estado actual del telefono y el sensor |
 | `GET` | `/api/history` | Obtiene hasta 60 mediciones historicas |
 | `PUT` | `/api/data` | Actualiza el estado simulado mediante JSON |
+| `PUT` | `/api/social-battery` | Establece la batería social externa (0 a 100), sin simularla |
 | `GET` | `/api/scenarios` | Lista los escenarios cargados al iniciar el servidor |
 | `GET` | `/api/scenario-status` | Consulta el progreso del escenario en ejecucion |
 | `POST` | `/api/scenarios/:id/start` | Inicia un escenario por su identificador |
@@ -133,6 +134,10 @@ durante la ejecucion las imagenes de la secuencia se muestran en el orden cargad
 Los valores que actualmente pueden simularse en un escenario son `noiseLevel`
 y `pulse`. Una actualización manual mediante `PUT /api/data`
 detiene el escenario activo.
+
+La batería social se conserva en el estado y se muestra en el historial, pero no
+forma parte de la simulación de escenarios. Para establecerla desde una fuente
+externa, enviar `{"socialBattery": 75}` a `PUT /api/social-battery`.
 
 La especificacion completa se puede explorar en Swagger UI.
 

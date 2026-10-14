@@ -3,7 +3,7 @@ const openapiDocument = {
   info: {
     title: 'Pulso Háptico API',
     version: '1.0.0',
-    description: 'API para consultar y actualizar los datos simulados del celular y del sensor.'
+    description: 'API para consultar datos simulados y actualizar la batería social externa.'
   },
   servers: [{ url: '/', description: 'Servidor actual' }],
   tags: [{ name: 'Simulación', description: 'Datos simulados del dispositivo' }],
@@ -52,6 +52,32 @@ const openapiDocument = {
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/BridgeState' }
+            }
+          }
+        },
+        '/api/social-battery': {
+          put: {
+            tags: ['Simulación'],
+            summary: 'Actualiza la batería social externa',
+            description: 'Establece el valor de batería social. No es modificado por los escenarios.',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/SocialBatteryUpdate' }
+                }
+              }
+            },
+            responses: {
+              '200': {
+                description: 'Batería social actualizada',
+                content: {
+                  'application/json': {
+                    schema: { $ref: '#/components/schemas/BridgeState' }
+                  }
+                }
+              },
+              '400': { description: 'Valor inválido: debe estar entre 0 y 100' }
             }
           }
         },
@@ -109,19 +135,28 @@ const openapiDocument = {
       },
       BridgeState: {
         type: 'object',
-        required: ['cellphone', 'sensor'],
+        required: ['cellphone', 'sensor', 'socialBattery'],
         properties: {
           cellphone: { $ref: '#/components/schemas/CellphoneData' },
-          sensor: { $ref: '#/components/schemas/SensorData' }
+          sensor: { $ref: '#/components/schemas/SensorData' },
+          socialBattery: { type: 'number', minimum: 0, maximum: 100, example: 75 }
+        }
+      },
+      SocialBatteryUpdate: {
+        type: 'object',
+        required: ['socialBattery'],
+        properties: {
+          socialBattery: { type: 'number', minimum: 0, maximum: 100, example: 75 }
         }
       },
       HistoryPoint: {
         type: 'object',
-        required: ['t', 'noiseLevel', 'pulse'],
+        required: ['t', 'noiseLevel', 'pulse', 'socialBattery'],
         properties: {
           t: { type: 'string', format: 'date-time' },
           noiseLevel: { type: 'number', example: 45 },
-          pulse: { type: 'number', example: 60 }
+          pulse: { type: 'number', example: 60 },
+          socialBattery: { type: 'number', minimum: 0, maximum: 100, example: 75 }
         }
       },
       ValueRange: {

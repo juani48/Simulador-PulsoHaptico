@@ -8,12 +8,14 @@ export interface SensorData { pulse: number; }
 export interface BridgeState {
   cellphone: CellphoneData;
   sensor: SensorData;
+  socialBattery: number;
 }
 
 export interface HistoryPoint {
   t: string;
   noiseLevel: number;
   pulse: number;
+  socialBattery: number;
 }
 
 export type ScenarioValue = 'noiseLevel' | 'pulse';

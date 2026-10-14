@@ -3,9 +3,13 @@ export interface CellphoneData {
   dateTime: string;
 }
 export interface SensorData { pulse: number; }
-export interface BridgeState { cellphone: CellphoneData; sensor: SensorData; }
+export interface BridgeState {
+  cellphone: CellphoneData;
+  sensor: SensorData;
+  socialBattery: number;
+}
 export interface HistoryPoint {
-  t: string; noiseLevel: number; pulse: number;
+  t: string; noiseLevel: number; pulse: number; socialBattery: number;
 }
 export type ScenarioValue = 'noiseLevel' | 'pulse';
 export interface ValueRange { minimum: number; maximum: number; }

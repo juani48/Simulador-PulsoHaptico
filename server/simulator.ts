@@ -21,7 +21,8 @@ class Simulator {
         noiseLevel: 45,
         dateTime: new Date().toISOString()
       },
-      sensor: { pulse: 60 }
+      sensor: { pulse: 60 },
+      socialBattery: 100
     };
   }
 
@@ -29,13 +30,29 @@ class Simulator {
     return {
       t: s.cellphone.dateTime,
       noiseLevel: s.cellphone.noiseLevel,
-      pulse: s.sensor.pulse
+      pulse: s.sensor.pulse,
+      socialBattery: s.socialBattery
     };
   }
 
   setData(state: BridgeState) {
     this.stopScenario();
-    this.state = state;
+    this.state = {
+      ...state,
+      socialBattery: state.socialBattery ?? this.state.socialBattery
+    };
+    this.recordState();
+  }
+
+  setSocialBattery(value: number) {
+    this.state = {
+      ...this.state,
+      socialBattery: value,
+      cellphone: {
+        ...this.state.cellphone,
+        dateTime: new Date().toISOString()
+      }
+    };
     this.recordState();
   }
 

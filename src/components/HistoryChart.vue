@@ -30,6 +30,13 @@ const chartData = computed(() => ({
       backgroundColor: 'rgba(78,163,255,.12)',
       tension: .35, fill: true, pointRadius: 0
     },
+    {
+      label: 'Batería social (%)',
+      data: props.history.map(p => p.socialBattery),
+      borderColor: '#52e2a6',
+      backgroundColor: 'rgba(82,226,166,.12)',
+      tension: .35, fill: false, pointRadius: 0
+    },
   ]
 }));
 

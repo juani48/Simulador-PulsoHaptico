@@ -24,6 +24,16 @@ export function createApiRouter(): Router {
     simulator.setData(req.body);
     res.json(simulator.getCurrent());
   });
+  router.put('/api/social-battery', (req, res) => {
+    const value = req.body?.socialBattery;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) {
+      res.status(400).json({ error: 'socialBattery debe ser un número entre 0 y 100' });
+      return;
+    }
+
+    simulator.setSocialBattery(value);
+    res.json(simulator.getCurrent());
+  });
 
   return router;
 }

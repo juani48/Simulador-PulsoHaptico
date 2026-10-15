@@ -113,17 +113,16 @@ El panel local de ngrok queda disponible en `http://localhost:4040`. El tunel pu
 
 ## API
 
-La API expone estos endpoints:
+La API expone estos endpoints públicos para consumo desde otra aplicación:
 
 | Metodo | Ruta | Descripcion |
 | --- | --- | --- |
-| `GET` | `/api/get-data` | Obtiene el estado actual del telefono y el sensor |
-| `GET` | `/api/history` | Obtiene hasta 60 mediciones historicas |
-| `PUT` | `/api/data` | Actualiza el estado simulado mediante JSON |
+| `GET` | `/api/data` | Obtiene el estado actual y la actividad seleccionada |
 | `PUT` | `/api/social-battery` | Establece la batería social externa (0 a 100), sin simularla |
-| `GET` | `/api/scenarios` | Lista los escenarios cargados al iniciar el servidor |
-| `GET` | `/api/scenario-status` | Consulta el progreso del escenario en ejecucion |
-| `POST` | `/api/scenarios/:id/start` | Inicia un escenario por su identificador |
+
+Los endpoints internos `/api/activities`, `/api/history`, `/api/scenarios`,
+`/api/scenario-status` y `/api/scenarios/:id/start` son utilizados únicamente
+por esta aplicación y no forman parte de la documentación pública OpenAPI.
 
 Cada escenario se compone de etapas (`stages`). Cada etapa define su duracion y los
 rangos minimo/maximo de los valores simulados para cada segundo. `finalValues`
@@ -138,6 +137,18 @@ detiene el escenario activo.
 La batería social se conserva en el estado y se muestra en el historial, pero no
 forma parte de la simulación de escenarios. Para establecerla desde una fuente
 externa, enviar `{"socialBattery": 75}` a `PUT /api/social-battery`.
+
+El endpoint `/api/activities` incluye tres actividades: una iniciada tres horas
+antes, una activa en el momento actual y una prevista para dentro de tres horas.
+Cada actividad incluye nombre, descripción, duración, el booleano `canBeDisturbing`
+y uno o más `dysregulatingFactors` de la lista de factores desreguladores
+documentada en OpenAPI. `/api/data` retorna
+solamente la actividad seleccionada en `activity`; si no se marca ninguna,
+ese campo retorna `""`.
+La configuración de una actividad seleccionada puede modificarse con
+`PUT /api/activities/{id}` enviando `canBeDisturbing` y una lista no vacía de
+`dysregulatingFactors`. Los factores deben pertenecer a la lista documentada
+en OpenAPI.
 
 La especificacion completa se puede explorar en Swagger UI.
 

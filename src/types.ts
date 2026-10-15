@@ -3,10 +3,38 @@ export interface CellphoneData {
   dateTime: string;
 }
 export interface SensorData { pulse: number; }
+export type DysregulatingFactor =
+  | 'Ruido emergente del ambiente'
+  | 'Murmullo de personas'
+  | 'Luces'
+  | 'Olores'
+  | 'Hablar en público'
+  | 'Situaciones no planificadas'
+  | 'Colores'
+  | 'Sociabilizar'
+  | 'Discusiones que no llegan a ningún lado'
+  | 'Texturas'
+  | 'Aglomeración de personas'
+  | 'Usar calzado (tener el pie encerrado)'
+  | 'Absorber las emociones de otros'
+  | 'Poca tolerancia a la frustración'
+  | 'Sobrecarga de actividades (requieren procesamiento información)'
+  | 'Deadlines simultáneos'
+  | 'Situaciones de evaluación';
+export interface Activity {
+  id: string;
+  name: string;
+  description: string;
+  canBeDisturbing: boolean;
+  dysregulatingFactors: DysregulatingFactor[];
+  dateTime: string;
+  duration: number;
+}
 export interface BridgeState {
   cellphone: CellphoneData;
   sensor: SensorData;
   socialBattery: number;
+  activity: Activity | '';
 }
 export interface HistoryPoint {
   t: string; noiseLevel: number; pulse: number; socialBattery: number;

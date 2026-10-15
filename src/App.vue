@@ -4,11 +4,14 @@ import CellphonePanel from './components/CellphonePanel.vue';
 import SensorPanel from './components/SensorPanel.vue';
 import HistoryChart from './components/HistoryChart.vue';
 import ScenarioPanel from './components/ScenarioPanel.vue';
-import type { BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types';
+import ActivityPanel from './components/ActivityPanel.vue';
+import type { Activity, BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types';
 
 const state = ref<BridgeState | null>(null);
 const history = ref<HistoryPoint[]>([]);
 const scenarios = ref<Scenario[]>([]);
+const activities = ref<Activity[]>([]);
+const selectedActivityId = ref('');
 const scenarioStatus = ref<ScenarioStatus>({ scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false });
 const scenarioLoading = ref(false);
 const carousel = ref<HTMLElement | null>(null);
@@ -16,16 +19,19 @@ const carouselIndex = ref(0);
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 async function fetchAll() {
   try {
-    const [s, h, status, availableScenarios] = await Promise.all([
-      fetch('/api/get-data').then(r => r.json()),
+    const [s, h, status, availableScenarios, availableActivities] = await Promise.all([
+      fetch('/api/data').then(r => r.json()),
       fetch('/api/history').then(r => r.json())
       , fetch('/api/scenario-status').then(r => r.json())
-      , fetch('/api/scenarios').then(r => r.json())
+      ,       fetch('/api/scenarios').then(r => r.json()),
+      fetch('/api/activities').then(r => r.json())
     ]);
     state.value = s;
     history.value = h;
     scenarioStatus.value = status;
     scenarios.value = availableScenarios;
+    activities.value = availableActivities;
+    selectedActivityId.value = s.activity ? s.activity.id : '';
   } catch (e) {
     console.error('Bridge no disponible', e);
   }
@@ -49,7 +55,7 @@ async function startScenario(id: string) {
     scenarioLoading.value = false;
   }
 }
-async function updateState(patch: Partial<BridgeState>) {
+async function updateState(patch: Partial<BridgeState> & { selectedActivity?: string }) {
   if (!state.value) return;
   const nextState = {
     ...state.value,
@@ -65,6 +71,7 @@ async function updateState(patch: Partial<BridgeState>) {
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.value = await response.json();
+    selectedActivityId.value = state.value?.activity ? state.value.activity.id : '';
     const historyResponse = await fetch('/api/history');
     if (!historyResponse.ok) throw new Error(`HTTP ${historyResponse.status}`);
     history.value = await historyResponse.json();
@@ -73,8 +80,26 @@ async function updateState(patch: Partial<BridgeState>) {
   }
 }
 
+async function updateActivitySettings(
+  activityId: string,
+  canBeDisturbing: boolean,
+  dysregulatingFactors: Activity['dysregulatingFactors']
+) {
+    try {
+      const response = await fetch(`/api/activities/${activityId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ canBeDisturbing, dysregulatingFactors })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      activities.value = await response.json();
+    } catch (e) {
+      console.error('No se pudo actualizar la configuración de la actividad', e);
+    }
+}
+
 function goToCarousel(index: number) {
-  const nextIndex = Math.max(0, Math.min(index, 1));
+  const nextIndex = Math.max(0, Math.min(index, 2));
   const element = carousel.value;
   if (!element) return;
 
@@ -104,31 +129,39 @@ function goToCarousel(index: number) {
           <CellphonePanel :data="state?.cellphone ?? null" @update="updateState" />
           <SensorPanel :data="state?.sensor ?? null" @update="updateState" />
         </div>
+        <div class="carousel-item">
+          <ActivityPanel
+            :activities="activities"
+            :selected-activity="selectedActivityId"
+            @select="updateState({ selectedActivity: $event })"
+            @update-settings="updateActivitySettings"
+          />
+        </div>
         </div>
         <div class="carousel-controls">
           <button
             class="carousel-button"
             type="button"
-            aria-label="Ver escenarios"
+            :aria-label="`Ver ${carouselIndex === 1 ? 'escenarios' : 'datos simulados'}`"
             :class="{ active: carouselIndex === 0 }"
             :disabled="carouselIndex === 0"
-            @click="goToCarousel(0)"
+            @click="goToCarousel(carouselIndex - 1)"
           >
             <span aria-hidden="true">←</span>
-            <span>Escenarios</span>
+            <span>{{ carouselIndex === 1 ? 'Escenarios' : 'Datos simulados' }}</span>
           </button>
           <div class="carousel-dots" aria-hidden="true">
-            <span v-for="index in 2" :key="index" class="carousel-dot" :class="{ active: carouselIndex === index - 1 }" />
+            <span v-for="index in 3" :key="index" class="carousel-dot" :class="{ active: carouselIndex === index - 1 }" />
           </div>
           <button
             class="carousel-button"
             type="button"
-            aria-label="Ver datos simulados"
-            :class="{ active: carouselIndex === 1 }"
-            :disabled="carouselIndex === 1"
-            @click="goToCarousel(1)"
+            :aria-label="`Ver ${carouselIndex === 0 ? 'datos simulados' : 'actividades'}`"
+            :class="{ active: carouselIndex === 2 }"
+            :disabled="carouselIndex === 2"
+            @click="goToCarousel(carouselIndex + 1)"
           >
-            <span>Datos simulados</span>
+            <span>{{ carouselIndex === 0 ? 'Datos simulados' : 'Actividades' }}</span>
             <span aria-hidden="true">→</span>
           </button>
         </div>

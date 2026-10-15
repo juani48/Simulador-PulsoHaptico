@@ -139,16 +139,17 @@ Por ejemplo, para agregar `temperature`:
 
 ## Extender la API
 
-Los endpoints actuales son:
+Los endpoints públicos actuales son:
 
 | Método | Ruta | Uso |
 | --- | --- | --- |
-| `GET` | `/api/get-data` | Estado actual |
-| `GET` | `/api/history` | Historial de mediciones |
-| `PUT` | `/api/data` | Actualización manual del estado |
-| `GET` | `/api/scenarios` | Catálogo cargado |
-| `GET` | `/api/scenario-status` | Progreso del escenario activo |
-| `POST` | `/api/scenarios/:id/start` | Inicio de un escenario |
+| `GET` | `/api/data` | Estado actual, incluyendo actividades |
+| `PUT` | `/api/social-battery` | Actualización de la batería social |
+
+La interfaz también utiliza `PUT /api/data` y endpoints internos para actualizar
+el estado, cargar actividades, historial y escenarios. Esos endpoints no deben
+agregarse a la documentación OpenAPI
+pública.
 
 Para agregar un endpoint:
 
@@ -162,6 +163,7 @@ Para agregar un endpoint:
 
 - `src/App.vue`: coordinación de consultas, estado global y acciones.
 - `src/components/ScenarioPanel.vue`: catálogo, selección, progreso e imágenes.
+- `src/components/ActivityPanel.vue`: selección de una actividad principal.
 - `src/components/CellphonePanel.vue`: datos del teléfono y ruido.
 - `src/components/SensorPanel.vue`: pulso.
 - `src/components/HistoryChart.vue`: historial gráfico.

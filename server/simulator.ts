@@ -1,4 +1,4 @@
-import type { BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types.js';
+import type { Activity, BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types.js';
 
 const MAX_HISTORY = 60;
 
@@ -6,6 +6,9 @@ class Simulator {
   private state!: BridgeState;
   private history: HistoryPoint[] = [];
   private readonly scenarios: Scenario[];
+  private selectedActivityId = '';
+  private readonly activityDisturbingOverrides = new Map<string, boolean>();
+  private readonly activityFactorOverrides = new Map<string, Activity['dysregulatingFactors']>();
   private scenarioTimer: ReturnType<typeof setInterval> | null = null;
   private activeScenario: { scenario: Scenario; startedAt: number } | null = null;
 
@@ -16,14 +19,57 @@ class Simulator {
   }
 
   private initialState(): BridgeState {
+    const now = Date.now();
     return {
       cellphone: {
         noiseLevel: 45,
         dateTime: new Date().toISOString()
       },
       sensor: { pulse: 60 },
-      socialBattery: 100
+      socialBattery: 100,
+      activity: ''
     };
+  }
+
+  private initialActivities(now: number): Activity[] {
+    const activities: Activity[] = [
+      {
+        id: 'activity-before',
+        name: 'Trabajo concentrado',
+        description: 'Bloque de trabajo individual que requiere atención sostenida.',
+        canBeDisturbing: true,
+        dysregulatingFactors: ['Deadlines simultáneos', 'Sobrecarga de actividades (requieren procesamiento información)'],
+        dateTime: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+        duration: 2
+      },
+      {
+        id: 'activity-current',
+        name: 'Encuentro social',
+        description: 'Reunión con otras personas para conversar y compartir un espacio.',
+        canBeDisturbing: true,
+        dysregulatingFactors: ['Murmullo de personas', 'Sociabilizar', 'Aglomeración de personas'],
+        dateTime: new Date(now).toISOString(),
+        duration: 2
+      },
+      {
+        id: 'activity-after',
+        name: 'Presentación',
+        description: 'Exposición oral frente a un grupo de personas.',
+        canBeDisturbing: true,
+        dysregulatingFactors: ['Hablar en público', 'Situaciones de evaluación', 'Situaciones no planificadas'],
+        dateTime: new Date(now + 3 * 60 * 60 * 1000).toISOString(),
+        duration: 2
+      }
+    ];
+    return activities.map(activity => {
+      const canBeDisturbing = this.activityDisturbingOverrides.get(activity.id);
+      const dysregulatingFactors = this.activityFactorOverrides.get(activity.id);
+      return {
+        ...activity,
+        ...(canBeDisturbing === undefined ? {} : { canBeDisturbing }),
+        ...(dysregulatingFactors === undefined ? {} : { dysregulatingFactors })
+      };
+    });
   }
 
   private toPoint(s: BridgeState): HistoryPoint {
@@ -35,11 +81,13 @@ class Simulator {
     };
   }
 
-  setData(state: BridgeState) {
+  setData(state: BridgeState & { selectedActivity?: string }) {
     this.stopScenario();
+    const { selectedActivity: _selectedActivity, ...data } = state;
     this.state = {
-      ...state,
-      socialBattery: state.socialBattery ?? this.state.socialBattery
+      ...data,
+      socialBattery: data.socialBattery ?? this.state.socialBattery,
+      activity: this.state.activity
     };
     this.recordState();
   }
@@ -56,7 +104,39 @@ class Simulator {
     this.recordState();
   }
 
-  getCurrent(): BridgeState { return this.state; }
+  getCurrent(): BridgeState {
+    const activities = this.initialActivities(Date.now());
+    const selectedActivity = activities.find(activity => activity.id === this.selectedActivityId) ?? '';
+    this.state = {
+      ...this.state,
+      activity: selectedActivity
+    };
+    return this.state;
+  }
+
+  getActivities(): Activity[] {
+    return this.initialActivities(Date.now());
+  }
+
+  selectActivity(activityId: string) {
+    this.selectedActivityId = activityId;
+  }
+
+  setActivityDisturbing(activityId: string, canBeDisturbing: boolean) {
+    const activity = this.initialActivities(Date.now()).find(candidate => candidate.id === activityId);
+    if (!activity) throw new Error(`Actividad desconocida: ${activityId}`);
+    this.activityDisturbingOverrides.set(activityId, canBeDisturbing);
+  }
+
+  setActivitySettings(
+    activityId: string,
+    settings: { canBeDisturbing: boolean; dysregulatingFactors: Activity['dysregulatingFactors'] }
+  ) {
+    const activity = this.initialActivities(Date.now()).find(candidate => candidate.id === activityId);
+    if (!activity) throw new Error(`Actividad desconocida: ${activityId}`);
+    this.activityDisturbingOverrides.set(activityId, settings.canBeDisturbing);
+    this.activityFactorOverrides.set(activityId, settings.dysregulatingFactors);
+  }
   getHistory(): HistoryPoint[] { return this.history; }
 
   getScenarios(): Scenario[] { return this.scenarios; }

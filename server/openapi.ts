@@ -8,13 +8,13 @@ const openapiDocument = {
   servers: [{ url: '/', description: 'Servidor actual' }],
   tags: [{ name: 'Simulación', description: 'Datos simulados del dispositivo' }],
   paths: {
-    '/api/get-data': {
+    '/api/data': {
       get: {
         tags: ['Simulación'],
-        summary: 'Obtiene el estado actual',
+        summary: 'Obtiene el estado actual y la actividad seleccionada',
         responses: {
           '200': {
-            description: 'Estado actual del celular y del sensor',
+            description: 'Estado actual del celular, sensor y actividad seleccionada',
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/BridgeState' }
@@ -24,95 +24,30 @@ const openapiDocument = {
         }
       }
     },
-    '/api/history': {
-      get: {
-        tags: ['Simulación'],
-        summary: 'Obtiene el historial de mediciones',
-        responses: {
-          '200': {
-            description: 'Hasta 60 mediciones simuladas',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'array',
-                  items: { $ref: '#/components/schemas/HistoryPoint' }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    '/api/data': {
+    '/api/social-battery': {
       put: {
         tags: ['Simulación'],
-        summary: 'Actualiza el estado simulado',
+        summary: 'Actualiza la batería social externa',
+        description: 'Establece el valor de batería social. No es modificado por los escenarios.',
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/BridgeState' }
-            }
-          }
-        },
-        '/api/social-battery': {
-          put: {
-            tags: ['Simulación'],
-            summary: 'Actualiza la batería social externa',
-            description: 'Establece el valor de batería social. No es modificado por los escenarios.',
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: { $ref: '#/components/schemas/SocialBatteryUpdate' }
-                }
-              }
-            },
-            responses: {
-              '200': {
-                description: 'Batería social actualizada',
-                content: {
-                  'application/json': {
-                    schema: { $ref: '#/components/schemas/BridgeState' }
-                  }
-                }
-              },
-              '400': { description: 'Valor inválido: debe estar entre 0 y 100' }
+              schema: { $ref: '#/components/schemas/SocialBatteryUpdate' }
             }
           }
         },
         responses: {
           '200': {
-            description: 'Estado actualizado',
+            description: 'Batería social actualizada',
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/BridgeState' }
-              }
+              },
             }
-          }
+          },
+          '400': { description: 'Valor inválido: debe estar entre 0 y 100' }
         }
-      }
-    },
-    '/api/scenarios': {
-      get: {
-        tags: ['Simulación'],
-        summary: 'Obtiene los escenarios disponibles',
-        responses: { '200': { description: 'Catálogo de escenarios' } }
-      }
-    },
-    '/api/scenario-status': {
-      get: {
-        tags: ['Simulación'],
-        summary: 'Obtiene el progreso del escenario activo',
-        responses: { '200': { description: 'Estado de ejecución del escenario' } }
-      }
-    },
-    '/api/scenarios/{id}/start': {
-      post: {
-        tags: ['Simulación'],
-        summary: 'Inicia un escenario',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: { '200': { description: 'Escenario iniciado' }, '404': { description: 'Escenario inexistente' } }
       }
     }
   },
@@ -133,13 +68,67 @@ const openapiDocument = {
           pulse: { type: 'number', example: 60 }
         }
       },
+      DysregulatingFactor: {
+        type: 'string',
+        enum: [
+          'Ruido emergente del ambiente',
+          'Murmullo de personas',
+          'Luces',
+          'Olores',
+          'Hablar en público',
+          'Situaciones no planificadas',
+          'Colores',
+          'Sociabilizar',
+          'Discusiones que no llegan a ningún lado',
+          'Texturas',
+          'Aglomeración de personas',
+          'Usar calzado (tener el pie encerrado)',
+          'Absorber las emociones de otros',
+          'Poca tolerancia a la frustración',
+          'Sobrecarga de actividades (requieren procesamiento información)',
+          'Deadlines simultáneos',
+          'Situaciones de evaluación'
+        ]
+      },
       BridgeState: {
         type: 'object',
-        required: ['cellphone', 'sensor', 'socialBattery'],
+        required: ['cellphone', 'sensor', 'socialBattery', 'activity'],
         properties: {
           cellphone: { $ref: '#/components/schemas/CellphoneData' },
           sensor: { $ref: '#/components/schemas/SensorData' },
-          socialBattery: { type: 'number', minimum: 0, maximum: 100, example: 75 }
+          socialBattery: { type: 'number', minimum: 0, maximum: 100, example: 75 },
+          activity: {
+            oneOf: [
+              { $ref: '#/components/schemas/Activity' },
+              { type: 'string', enum: [''] }
+            ],
+            description: 'Actividad seleccionada; cadena vacía si no hay selección'
+          }
+        }
+      },
+      Activity: {
+        type: 'object',
+        required: [
+          'id',
+          'name',
+          'description',
+          'canBeDisturbing',
+          'dysregulatingFactors',
+          'dateTime',
+          'duration'
+        ],
+        properties: {
+          id: { type: 'string', example: 'activity-current' },
+          name: { type: 'string', example: 'Actividad actual' },
+          description: { type: 'string', example: 'Reunión con otras personas para conversar y compartir un espacio.' },
+          canBeDisturbing: { type: 'boolean', example: true },
+          dysregulatingFactors: {
+            type: 'array',
+            minItems: 1,
+            items: { $ref: '#/components/schemas/DysregulatingFactor' }
+          },
+          dateTime: { type: 'string', format: 'date-time' },
+          duration: { type: 'number', example: 2, description: 'Duración en horas' }
         }
       },
       SocialBatteryUpdate: {

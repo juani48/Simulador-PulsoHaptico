@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Activity, DysregulatingFactor } from '../types';
+import type { Activity } from '../types';
 
 const props = defineProps<{
   activities: Activity[];
@@ -11,8 +11,7 @@ const emit = defineEmits<{
   select: [activityId: string];
   updateSettings: [
     activityId: string,
-    canBeDisturbing: boolean,
-    dysregulatingFactors: DysregulatingFactor[]
+    canBeDisturbing: boolean
   ];
 }>();
 
@@ -20,35 +19,9 @@ const selectedActivityData = computed(() =>
   props.activities.find(activity => activity.id === props.selectedActivity)
 );
 
-const dysregulatingFactors: DysregulatingFactor[] = [
-  'Ruido emergente del ambiente',
-  'Murmullo de personas',
-  'Luces',
-  'Olores',
-  'Hablar en público',
-  'Situaciones no planificadas',
-  'Colores',
-  'Sociabilizar',
-  'Discusiones que no llegan a ningún lado',
-  'Texturas',
-  'Aglomeración de personas',
-  'Usar calzado (tener el pie encerrado)',
-  'Absorber las emociones de otros',
-  'Poca tolerancia a la frustración',
-  'Sobrecarga de actividades (requieren procesamiento información)',
-  'Deadlines simultáneos',
-  'Situaciones de evaluación'
-];
-
-function updateSettings(canBeDisturbing: boolean, factor?: DysregulatingFactor) {
+function updateSettings(canBeDisturbing: boolean) {
   if (!selectedActivityData.value) return;
-  const factors = factor
-    ? selectedActivityData.value.dysregulatingFactors.includes(factor)
-      ? selectedActivityData.value.dysregulatingFactors.filter(item => item !== factor)
-      : [...selectedActivityData.value.dysregulatingFactors, factor]
-    : selectedActivityData.value.dysregulatingFactors;
-  if (factors.length === 0) return;
-  emit('updateSettings', selectedActivityData.value.id, canBeDisturbing, factors);
+  emit('updateSettings', selectedActivityData.value.id, canBeDisturbing);
 }
 
 function formatDateTime(value: string) {
@@ -104,18 +77,8 @@ function formatDateTime(value: string) {
             No
           </label>
         </div>
-        <div class="factor-section">
-          <strong>Factores desreguladores</strong>
-          <div class="factor-list">
-            <label v-for="factor in dysregulatingFactors" :key="factor" class="factor">
-              <input type="checkbox" :checked="selectedActivityData.dysregulatingFactors.includes(factor)"
-                @change="updateSettings(selectedActivityData.canBeDisturbing, factor)" />
-              <span>{{ factor }}</span>
-            </label>
-          </div>
-        </div>
       </template>
-      <p v-else class="description">Seleccioná una actividad para configurar sus factores.</p>
+      <p v-else class="description">Seleccioná una actividad para configurar si puede molestar.</p>
     </div>
   </section>
 </template>
@@ -173,26 +136,8 @@ function formatDateTime(value: string) {
 .disturbing-options label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
 .disturbing-options input { accent-color: var(--accent-2); }
 .settings-card { display: flex; flex-direction: column; }
-.factor-section {
-  display: grid;
-  gap: 10px;
-  min-height: 0;
-  margin-top: 14px;
-  color: var(--text);
-  font-size: 13px;
-}
-.factor-list {
-  display: grid;
-  gap: 8px;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 8px;
-}
-.factor { display: flex; align-items: flex-start; gap: 7px; color: var(--muted); cursor: pointer; }
-.factor input { flex: 0 0 auto; margin-top: 2px; accent-color: var(--accent-2); }
 @media (max-width: 720px) {
   .activity-layout { grid-template-columns: 1fr; height: auto; }
   .activities { max-height: 260px; }
-  .factor-list { max-height: 180px; }
 }
 </style>

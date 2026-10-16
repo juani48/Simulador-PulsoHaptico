@@ -141,14 +141,11 @@ externa, enviar `{"socialBattery": 75}` a `PUT /api/social-battery`.
 El endpoint `/api/activities` incluye tres actividades: una iniciada tres horas
 antes, una activa en el momento actual y una prevista para dentro de tres horas.
 Cada actividad incluye nombre, descripción, duración, el booleano `canBeDisturbing`
-y uno o más `dysregulatingFactors` de la lista de factores desreguladores
-documentada en OpenAPI. `/api/data` retorna
+y no tiene factores desreguladores asignados. `/api/data` retorna
 solamente la actividad seleccionada en `activity`; si no se marca ninguna,
 ese campo retorna `""`.
 La configuración de una actividad seleccionada puede modificarse con
-`PUT /api/activities/{id}` enviando `canBeDisturbing` y una lista no vacía de
-`dysregulatingFactors`. Los factores deben pertenecer a la lista documentada
-en OpenAPI.
+`PUT /api/activities/{id}` enviando únicamente `canBeDisturbing`.
 
 La especificacion completa se puede explorar en Swagger UI.
 

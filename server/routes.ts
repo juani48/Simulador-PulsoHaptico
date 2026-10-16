@@ -2,7 +2,6 @@ import { Router } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import openapiDocument from './openapi.js';
 import { simulator } from './simulator.js';
-import { DYSREGULATING_FACTORS } from './types.js';
 
 export function createApiRouter(): Router {
   const router = Router();
@@ -13,23 +12,14 @@ export function createApiRouter(): Router {
   router.get('/api/data', (_req, res) => res.json(simulator.getCurrent()));
   router.get('/api/activities', (_req, res) => res.json(simulator.getActivities()));
   router.put('/api/activities/:id', (req, res) => {
-    const { canBeDisturbing, dysregulatingFactors } = req.body ?? {};
-    if (
-      typeof canBeDisturbing !== 'boolean' ||
-      !Array.isArray(dysregulatingFactors) ||
-      dysregulatingFactors.length === 0 ||
-      dysregulatingFactors.some(
-        (factor: unknown) => !DYSREGULATING_FACTORS.includes(factor as typeof DYSREGULATING_FACTORS[number])
-      )
-    ) {
-      res.status(400).json({
-        error: 'canBeDisturbing debe ser booleano y dysregulatingFactors debe ser una lista no vacía'
-      });
+    const { canBeDisturbing } = req.body ?? {};
+    if (typeof canBeDisturbing !== 'boolean') {
+      res.status(400).json({ error: 'canBeDisturbing debe ser booleano' });
       return;
     }
 
     try {
-      simulator.setActivitySettings(req.params.id, { canBeDisturbing, dysregulatingFactors });
+      simulator.setActivitySettings(req.params.id, { canBeDisturbing });
       res.json(simulator.getActivities());
     } catch (error) {
       res.status(404).json({ error: error instanceof Error ? error.message : 'Actividad no encontrada' });

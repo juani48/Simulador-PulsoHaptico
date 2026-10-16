@@ -8,7 +8,6 @@ class Simulator {
   private readonly scenarios: Scenario[];
   private selectedActivityId = '';
   private readonly activityDisturbingOverrides = new Map<string, boolean>();
-  private readonly activityFactorOverrides = new Map<string, Activity['dysregulatingFactors']>();
   private scenarioTimer: ReturnType<typeof setInterval> | null = null;
   private activeScenario: { scenario: Scenario; startedAt: number } | null = null;
 
@@ -38,7 +37,6 @@ class Simulator {
         name: 'Trabajo concentrado',
         description: 'Bloque de trabajo individual que requiere atención sostenida.',
         canBeDisturbing: true,
-        dysregulatingFactors: ['Deadlines simultáneos', 'Sobrecarga de actividades (requieren procesamiento información)'],
         dateTime: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
         duration: 2
       },
@@ -47,7 +45,6 @@ class Simulator {
         name: 'Encuentro social',
         description: 'Reunión con otras personas para conversar y compartir un espacio.',
         canBeDisturbing: true,
-        dysregulatingFactors: ['Murmullo de personas', 'Sociabilizar', 'Aglomeración de personas'],
         dateTime: new Date(now).toISOString(),
         duration: 2
       },
@@ -56,18 +53,15 @@ class Simulator {
         name: 'Presentación',
         description: 'Exposición oral frente a un grupo de personas.',
         canBeDisturbing: true,
-        dysregulatingFactors: ['Hablar en público', 'Situaciones de evaluación', 'Situaciones no planificadas'],
         dateTime: new Date(now + 3 * 60 * 60 * 1000).toISOString(),
         duration: 2
       }
     ];
     return activities.map(activity => {
       const canBeDisturbing = this.activityDisturbingOverrides.get(activity.id);
-      const dysregulatingFactors = this.activityFactorOverrides.get(activity.id);
       return {
         ...activity,
-        ...(canBeDisturbing === undefined ? {} : { canBeDisturbing }),
-        ...(dysregulatingFactors === undefined ? {} : { dysregulatingFactors })
+        ...(canBeDisturbing === undefined ? {} : { canBeDisturbing })
       };
     });
   }
@@ -122,20 +116,10 @@ class Simulator {
     this.selectedActivityId = activityId;
   }
 
-  setActivityDisturbing(activityId: string, canBeDisturbing: boolean) {
-    const activity = this.initialActivities(Date.now()).find(candidate => candidate.id === activityId);
-    if (!activity) throw new Error(`Actividad desconocida: ${activityId}`);
-    this.activityDisturbingOverrides.set(activityId, canBeDisturbing);
-  }
-
-  setActivitySettings(
-    activityId: string,
-    settings: { canBeDisturbing: boolean; dysregulatingFactors: Activity['dysregulatingFactors'] }
-  ) {
+  setActivitySettings(activityId: string, settings: { canBeDisturbing: boolean }) {
     const activity = this.initialActivities(Date.now()).find(candidate => candidate.id === activityId);
     if (!activity) throw new Error(`Actividad desconocida: ${activityId}`);
     this.activityDisturbingOverrides.set(activityId, settings.canBeDisturbing);
-    this.activityFactorOverrides.set(activityId, settings.dysregulatingFactors);
   }
   getHistory(): HistoryPoint[] { return this.history; }
 

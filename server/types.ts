@@ -4,49 +4,11 @@ export interface CellphoneData {
 }
 
 export interface SensorData { pulse: number; }
-export const DYSREGULATING_FACTORS = [
-  'Ruido emergente del ambiente',
-  'Murmullo de personas',
-  'Luces',
-  'Olores',
-  'Hablar en público',
-  'Situaciones no planificadas',
-  'Colores',
-  'Sociabilizar',
-  'Discusiones que no llegan a ningún lado',
-  'Texturas',
-  'Aglomeración de personas',
-  'Usar calzado (tener el pie encerrado)',
-  'Absorber las emociones de otros',
-  'Poca tolerancia a la frustración',
-  'Sobrecarga de actividades (requieren procesamiento información)',
-  'Deadlines simultáneos',
-  'Situaciones de evaluación'
-] as const;
-export type DysregulatingFactor =
-  | 'Ruido emergente del ambiente'
-  | 'Murmullo de personas'
-  | 'Luces'
-  | 'Olores'
-  | 'Hablar en público'
-  | 'Situaciones no planificadas'
-  | 'Colores'
-  | 'Sociabilizar'
-  | 'Discusiones que no llegan a ningún lado'
-  | 'Texturas'
-  | 'Aglomeración de personas'
-  | 'Usar calzado (tener el pie encerrado)'
-  | 'Absorber las emociones de otros'
-  | 'Poca tolerancia a la frustración'
-  | 'Sobrecarga de actividades (requieren procesamiento información)'
-  | 'Deadlines simultáneos'
-  | 'Situaciones de evaluación';
 export interface Activity {
   id: string;
   name: string;
   description: string;
   canBeDisturbing: boolean;
-  dysregulatingFactors: DysregulatingFactor[];
   dateTime: string;
   duration: number;
 }

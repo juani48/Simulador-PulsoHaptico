@@ -68,28 +68,6 @@ const openapiDocument = {
           pulse: { type: 'number', example: 60 }
         }
       },
-      DysregulatingFactor: {
-        type: 'string',
-        enum: [
-          'Ruido emergente del ambiente',
-          'Murmullo de personas',
-          'Luces',
-          'Olores',
-          'Hablar en público',
-          'Situaciones no planificadas',
-          'Colores',
-          'Sociabilizar',
-          'Discusiones que no llegan a ningún lado',
-          'Texturas',
-          'Aglomeración de personas',
-          'Usar calzado (tener el pie encerrado)',
-          'Absorber las emociones de otros',
-          'Poca tolerancia a la frustración',
-          'Sobrecarga de actividades (requieren procesamiento información)',
-          'Deadlines simultáneos',
-          'Situaciones de evaluación'
-        ]
-      },
       BridgeState: {
         type: 'object',
         required: ['cellphone', 'sensor', 'socialBattery', 'activity'],
@@ -113,7 +91,6 @@ const openapiDocument = {
           'name',
           'description',
           'canBeDisturbing',
-          'dysregulatingFactors',
           'dateTime',
           'duration'
         ],
@@ -122,11 +99,6 @@ const openapiDocument = {
           name: { type: 'string', example: 'Actividad actual' },
           description: { type: 'string', example: 'Reunión con otras personas para conversar y compartir un espacio.' },
           canBeDisturbing: { type: 'boolean', example: true },
-          dysregulatingFactors: {
-            type: 'array',
-            minItems: 1,
-            items: { $ref: '#/components/schemas/DysregulatingFactor' }
-          },
           dateTime: { type: 'string', format: 'date-time' },
           duration: { type: 'number', example: 2, description: 'Duración en horas' }
         }

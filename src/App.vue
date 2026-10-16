@@ -82,14 +82,13 @@ async function updateState(patch: Partial<BridgeState> & { selectedActivity?: st
 
 async function updateActivitySettings(
   activityId: string,
-  canBeDisturbing: boolean,
-  dysregulatingFactors: Activity['dysregulatingFactors']
+  canBeDisturbing: boolean
 ) {
     try {
       const response = await fetch(`/api/activities/${activityId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canBeDisturbing, dysregulatingFactors })
+        body: JSON.stringify({ canBeDisturbing })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       activities.value = await response.json();
@@ -119,7 +118,7 @@ function goToCarousel(index: number) {
     </header>
 
     <main class="grid">
-      <HistoryChart :history="history" />
+      <HistoryChart :history="history" :social-battery="state?.socialBattery ?? 0" />
       <div class="carousel-shell">
         <div ref="carousel" class="carousel" aria-label="Controles de simulación">
         <div class="carousel-item">

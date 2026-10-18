@@ -10,19 +10,16 @@ export function createApiRouter(): Router {
   router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
   router.get('/api/data', (_req, res) => res.json(simulator.getCurrent()));
-  router.get('/api/activities', (_req, res) => res.json(simulator.getActivities()));
-  router.put('/api/activities/:id', (req, res) => {
-    const { canBeDisturbing } = req.body ?? {};
-    if (typeof canBeDisturbing !== 'boolean') {
-      res.status(400).json({ error: 'canBeDisturbing debe ser booleano' });
-      return;
-    }
-
+  router.get('/api/profiles', (_req, res) => res.json(simulator.getProfiles()));
+  router.put('/api/profile', (req, res) => {
     try {
-      simulator.setActivitySettings(req.params.id, { canBeDisturbing });
-      res.json(simulator.getActivities());
+      if (typeof req.body?.profileId !== 'string') {
+        res.status(400).json({ error: 'profileId debe ser una cadena' });
+        return;
+      }
+      res.json(simulator.selectProfile(req.body.profileId));
     } catch (error) {
-      res.status(404).json({ error: error instanceof Error ? error.message : 'Actividad no encontrada' });
+      res.status(404).json({ error: error instanceof Error ? error.message : 'Perfil no encontrado' });
     }
   });
   router.get('/api/history', (_req, res) => res.json(simulator.getHistory()));
@@ -36,9 +33,6 @@ export function createApiRouter(): Router {
     }
   });
   router.put('/api/data', (req, res) => {
-    if (typeof req.body?.selectedActivity === 'string') {
-      simulator.selectActivity(req.body.selectedActivity);
-    }
     simulator.setData(req.body);
     res.json(simulator.getCurrent());
   });

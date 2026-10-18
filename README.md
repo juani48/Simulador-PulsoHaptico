@@ -117,10 +117,13 @@ La API expone estos endpoints públicos para consumo desde otra aplicación:
 
 | Metodo | Ruta | Descripcion |
 | --- | --- | --- |
-| `GET` | `/api/data` | Obtiene el estado actual y la actividad seleccionada |
+| `GET` | `/api/data` | Obtiene el estado actual y el perfil seleccionado |
+| `PUT` | `/api/data` | Modifica los datos del dispositivo, incluida la hora expuesta |
+| `GET` | `/api/profiles` | Lista los perfiles de personas neurodivergentes |
+| `PUT` | `/api/profile` | Selecciona un perfil y carga sus valores iniciales |
 | `PUT` | `/api/social-battery` | Establece la batería social externa (0 a 100), sin simularla |
 
-Los endpoints internos `/api/activities`, `/api/history`, `/api/scenarios`,
+Los endpoints internos `/api/history`, `/api/scenarios`,
 `/api/scenario-status` y `/api/scenarios/:id/start` son utilizados únicamente
 por esta aplicación y no forman parte de la documentación pública OpenAPI.
 
@@ -135,17 +138,24 @@ y `pulse`. Una actualización manual mediante `PUT /api/data`
 detiene el escenario activo.
 
 La batería social se conserva en el estado y se muestra en el historial, pero no
-forma parte de la simulación de escenarios. Para establecerla desde una fuente
-externa, enviar `{"socialBattery": 75}` a `PUT /api/social-battery`.
+forma parte de la configuración de ningún perfil ni de la simulación de
+escenarios. El consumidor de la API debe establecerla enviando
+`{"socialBattery": 75}` a `PUT /api/social-battery`; cambiar de perfil no la
+reinicia.
 
-El endpoint `/api/activities` incluye tres actividades: una iniciada tres horas
-antes, una activa en el momento actual y una prevista para dentro de tres horas.
-Cada actividad incluye nombre, descripción, duración, el booleano `canBeDisturbing`
-y no tiene factores desreguladores asignados. `/api/data` retorna
-solamente la actividad seleccionada en `activity`; si no se marca ninguna,
-ese campo retorna `""`.
-La configuración de una actividad seleccionada puede modificarse con
-`PUT /api/activities/{id}` enviando únicamente `canBeDisturbing`.
+Cada perfil de `/api/profiles` representa a una persona entrevistada e incluye
+su configuración de Home, actividades del calendario,
+factores que pueden desregularla y estrategias de autorregulación o prevención.
+`PUT /api/profile` recibe `{"profileId": "nd1"}` y reinicia el simulador con los
+valores del dispositivo de ese perfil. En cada respuesta de perfiles, la fecha
+de las actividades se ajusta al día actual; sus horas de inicio y fin no cambian.
+`/api/data` devuelve el perfil seleccionado junto con los valores actuales del
+celular, sensor y batería social. La hora de `cellphone.dateTime` puede
+modificarse mediante `PUT /api/data`; al consumir la respuesta, su día se ajusta
+al día actual y se conserva la hora configurada. El objeto `profile` conserva
+únicamente la configuración de Home, el mensaje, las actividades, los
+desreguladores y la regulación; los valores dinámicos se exponen en los objetos
+`cellphone`, `sensor` y `socialBattery`.
 
 La especificacion completa se puede explorar en Swagger UI.
 

@@ -3,7 +3,7 @@ const openapiDocument = {
   info: {
     title: 'Pulso Háptico API',
     version: '1.0.0',
-    description: 'API para consultar datos simulados y actualizar la batería social externa.'
+    description: 'API para consultar datos simulados, actualizar la hora expuesta y establecer la batería social externa.'
   },
   servers: [{ url: '/', description: 'Servidor actual' }],
   tags: [{ name: 'Simulación', description: 'Datos simulados del dispositivo' }],
@@ -11,10 +11,34 @@ const openapiDocument = {
     '/api/data': {
       get: {
         tags: ['Simulación'],
-        summary: 'Obtiene el estado actual y la actividad seleccionada',
+        summary: 'Obtiene el estado actual y el perfil seleccionado',
+        description: 'Actualiza la fecha al día actual al responder. La hora configurada se conserva.',
         responses: {
           '200': {
-            description: 'Estado actual del celular, sensor y actividad seleccionada',
+            description: 'Estado actual del celular, sensor y perfil seleccionado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/BridgeState' }
+              }
+            }
+          }
+        }
+      },
+      put: {
+        tags: ['Simulación'],
+        summary: 'Actualiza los datos expuestos del dispositivo',
+        description: 'Permite modificar la hora expuesta en cellphone.dateTime. La fecha se reemplaza por el día actual al responder.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/BridgeState' }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Estado actualizado',
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/BridgeState' }
@@ -58,7 +82,11 @@ const openapiDocument = {
         required: ['noiseLevel', 'dateTime'],
         properties: {
           noiseLevel: { type: 'number', example: 45 },
-          dateTime: { type: 'string', format: 'date-time' }
+          dateTime: {
+            type: 'string',
+            format: 'date-time',
+            description: 'La fecha se ajusta al día actual; la hora puede modificarse mediante PUT /api/data.'
+          }
         }
       },
       SensorData: {
@@ -70,37 +98,39 @@ const openapiDocument = {
       },
       BridgeState: {
         type: 'object',
-        required: ['cellphone', 'sensor', 'socialBattery', 'activity'],
+        required: ['cellphone', 'sensor', 'socialBattery', 'selectedProfileId', 'profile'],
         properties: {
           cellphone: { $ref: '#/components/schemas/CellphoneData' },
           sensor: { $ref: '#/components/schemas/SensorData' },
           socialBattery: { type: 'number', minimum: 0, maximum: 100, example: 75 },
-          activity: {
-            oneOf: [
-              { $ref: '#/components/schemas/Activity' },
-              { type: 'string', enum: [''] }
-            ],
-            description: 'Actividad seleccionada; cadena vacía si no hay selección'
-          }
+          selectedProfileId: { type: 'string', example: 'nd1' },
+          profile: { $ref: '#/components/schemas/NeurodivergentProfile' }
         }
       },
-      Activity: {
+      NeurodivergentProfile: {
         type: 'object',
-        required: [
-          'id',
-          'name',
-          'description',
-          'canBeDisturbing',
-          'dateTime',
-          'duration'
-        ],
+        required: ['id', 'name', 'homeConfig', 'activities', 'dysregulators', 'regulation'],
         properties: {
-          id: { type: 'string', example: 'activity-current' },
-          name: { type: 'string', example: 'Actividad actual' },
-          description: { type: 'string', example: 'Reunión con otras personas para conversar y compartir un espacio.' },
-          canBeDisturbing: { type: 'boolean', example: true },
-          dateTime: { type: 'string', format: 'date-time' },
-          duration: { type: 'number', example: 2, description: 'Duración en horas' }
+          id: { type: 'string', example: 'nd1' },
+          name: { type: 'string', example: 'Persona ND1' },
+          homeConfig: { type: 'string', example: 'Config. A' },
+          homeMessage: { type: 'string', example: 'Volve a vos' },
+          activities: {
+            type: 'array',
+            description: 'La fecha se establece al día actual en cada consumo; startTime y endTime permanecen fijos.',
+            items: { $ref: '#/components/schemas/ProfileActivity' }
+          },
+          dysregulators: { type: 'array', items: { type: 'string' } },
+          regulation: { type: 'object', properties: { mode: { type: 'string' }, condition: { type: 'string' }, strategies: { type: 'array', items: { type: 'string' } } } }
+        }
+      },
+      ProfileActivity: {
+        type: 'object',
+        required: ['id', 'name', 'type', 'date', 'startTime', 'endTime', 'canGiveNotice'],
+        properties: {
+          id: { type: 'string' }, name: { type: 'string' }, type: { type: 'string' },
+          date: { type: 'string', format: 'date' }, startTime: { type: 'string' },
+          endTime: { type: 'string' }, canGiveNotice: { type: 'boolean' }
         }
       },
       SocialBatteryUpdate: {

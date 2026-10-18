@@ -4,14 +4,14 @@ import CellphonePanel from './components/CellphonePanel.vue';
 import SensorPanel from './components/SensorPanel.vue';
 import HistoryChart from './components/HistoryChart.vue';
 import ScenarioPanel from './components/ScenarioPanel.vue';
-import ActivityPanel from './components/ActivityPanel.vue';
-import type { Activity, BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types';
+import ProfilePanel from './components/ProfilePanel.vue';
+import type { BridgeState, HistoryPoint, NeurodivergentProfile, Scenario, ScenarioStatus } from './types';
 
 const state = ref<BridgeState | null>(null);
 const history = ref<HistoryPoint[]>([]);
 const scenarios = ref<Scenario[]>([]);
-const activities = ref<Activity[]>([]);
-const selectedActivityId = ref('');
+const profiles = ref<NeurodivergentProfile[]>([]);
+const selectedProfileId = ref('');
 const scenarioStatus = ref<ScenarioStatus>({ scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false });
 const scenarioLoading = ref(false);
 const carousel = ref<HTMLElement | null>(null);
@@ -19,19 +19,19 @@ const carouselIndex = ref(0);
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 async function fetchAll() {
   try {
-    const [s, h, status, availableScenarios, availableActivities] = await Promise.all([
+    const [s, h, status, availableScenarios, availableProfiles] = await Promise.all([
       fetch('/api/data').then(r => r.json()),
       fetch('/api/history').then(r => r.json())
       , fetch('/api/scenario-status').then(r => r.json())
       ,       fetch('/api/scenarios').then(r => r.json()),
-      fetch('/api/activities').then(r => r.json())
+      fetch('/api/profiles').then(r => r.json())
     ]);
     state.value = s;
     history.value = h;
     scenarioStatus.value = status;
     scenarios.value = availableScenarios;
-    activities.value = availableActivities;
-    selectedActivityId.value = s.activity ? s.activity.id : '';
+    profiles.value = availableProfiles;
+    selectedProfileId.value = s.selectedProfileId;
   } catch (e) {
     console.error('Bridge no disponible', e);
   }
@@ -55,7 +55,7 @@ async function startScenario(id: string) {
     scenarioLoading.value = false;
   }
 }
-async function updateState(patch: Partial<BridgeState> & { selectedActivity?: string }) {
+async function updateState(patch: Partial<BridgeState>) {
   if (!state.value) return;
   const nextState = {
     ...state.value,
@@ -71,7 +71,6 @@ async function updateState(patch: Partial<BridgeState> & { selectedActivity?: st
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.value = await response.json();
-    selectedActivityId.value = state.value?.activity ? state.value.activity.id : '';
     const historyResponse = await fetch('/api/history');
     if (!historyResponse.ok) throw new Error(`HTTP ${historyResponse.status}`);
     history.value = await historyResponse.json();
@@ -80,20 +79,19 @@ async function updateState(patch: Partial<BridgeState> & { selectedActivity?: st
   }
 }
 
-async function updateActivitySettings(
-  activityId: string,
-  canBeDisturbing: boolean
-) {
+async function selectProfile(profileId: string) {
     try {
-      const response = await fetch(`/api/activities/${activityId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canBeDisturbing })
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      activities.value = await response.json();
-    } catch (e) {
-      console.error('No se pudo actualizar la configuración de la actividad', e);
+        const response = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileId })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        state.value = await response.json();
+        selectedProfileId.value = profileId;
+        history.value = await fetch('/api/history').then(r => r.json());
+      } catch (e) {
+        console.error('No se pudo cargar el perfil', e);
     }
 }
 
@@ -113,12 +111,15 @@ function goToCarousel(index: number) {
 <template>
   <div class="app">
     <header class="header">
-      <h1>SIMULADOR DE CONTEXTO</h1>
-      <span class="dot" :class="{ live: !!state }" />
+      <h1>Valores Contextuales</h1>
+      <span class="connection" :class="{ live: !!state }">{{ state ? 'Conectado' : 'Conectando…' }}</span>
     </header>
 
     <main class="grid">
-      <HistoryChart :history="history" :social-battery="state?.socialBattery ?? 0" />
+      <HistoryChart
+        :history="history"
+        :social-battery="state?.socialBattery ?? 0"
+      />
       <div class="carousel-shell">
         <div ref="carousel" class="carousel" aria-label="Controles de simulación">
         <div class="carousel-item">
@@ -129,11 +130,10 @@ function goToCarousel(index: number) {
           <SensorPanel :data="state?.sensor ?? null" @update="updateState" />
         </div>
         <div class="carousel-item">
-          <ActivityPanel
-            :activities="activities"
-            :selected-activity="selectedActivityId"
-            @select="updateState({ selectedActivity: $event })"
-            @update-settings="updateActivitySettings"
+          <ProfilePanel
+            :profiles="profiles"
+            :selected-profile-id="selectedProfileId"
+            @select="selectProfile"
           />
         </div>
         </div>
@@ -155,12 +155,12 @@ function goToCarousel(index: number) {
           <button
             class="carousel-button"
             type="button"
-            :aria-label="`Ver ${carouselIndex === 0 ? 'datos simulados' : 'actividades'}`"
+            :aria-label="`Ver ${carouselIndex === 0 ? 'datos simulados' : 'perfiles'}`"
             :class="{ active: carouselIndex === 2 }"
             :disabled="carouselIndex === 2"
             @click="goToCarousel(carouselIndex + 1)"
           >
-            <span>{{ carouselIndex === 0 ? 'Datos simulados' : 'Actividades' }}</span>
+            <span>{{ carouselIndex === 0 ? 'Datos simulados' : 'Perfiles' }}</span>
             <span aria-hidden="true">→</span>
           </button>
         </div>
@@ -170,31 +170,33 @@ function goToCarousel(index: number) {
 </template>
 
 <style scoped>
-.app { max-width: 1100px; margin: 0 auto; padding: 32px 20px 60px; }
+.app { max-width: 1120px; margin: 0 auto; padding: 24px 28px 48px; }
 .header {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 22px; padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--line);
 }
 .header h1 {
-  font-size: 26px; letter-spacing: 2px; margin: 0;
+  font-size: clamp(28px, 4vw, 42px); font-weight: 600;
+  letter-spacing: .08em; margin: 0;
   background: linear-gradient(180deg, #fff, #a9b6da);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: #445; transition: background .3s;
+.connection {
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 4px 9px; color: var(--muted); font-size: 11px;
 }
-.dot.live { background: var(--accent-2); box-shadow: 0 0 10px var(--accent-2); }
+.connection.live { color: var(--accent-2); }
 
 .grid {
   display: grid;
-  gap: 18px;
+  gap: 22px;
   grid-template-columns: 1fr;
 }
 .carousel-shell {
   width: 100%;
   min-width: 0;
-  height: 398px;
+  height: 440px;
 }
 .carousel {
   display: flex;
@@ -226,10 +228,10 @@ function goToCarousel(index: number) {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 5px;
   padding: 8px 13px;
-  color: var(--muted);
-  background: rgba(19, 26, 46, .8);
+  color: var(--text);
+  background: var(--card);
   font: inherit;
   font-size: 12px;
   cursor: pointer;
@@ -266,6 +268,8 @@ function goToCarousel(index: number) {
 }
 
 @media (max-width: 780px) {
+  .app { padding-inline: 14px; }
+  .header h1 { font-size: 25px; }
   .data-item { grid-template-columns: 1fr; }
   .carousel-button { padding: 8px 10px; }
 }

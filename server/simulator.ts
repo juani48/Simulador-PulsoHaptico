@@ -1,4 +1,6 @@
-import type { Activity, BridgeState, HistoryPoint, Scenario, ScenarioStatus } from './types.js';
+import type { BridgeState, HistoryPoint, NeurodivergentProfile, Scenario, ScenarioStatus } from './types.js';
+import { profiles, type ProfileSeed } from './profiles.js';
+import { formatDate, withCurrentDate } from './time.js';
 
 const MAX_HISTORY = 60;
 
@@ -6,64 +8,64 @@ class Simulator {
   private state!: BridgeState;
   private history: HistoryPoint[] = [];
   private readonly scenarios: Scenario[];
-  private selectedActivityId = '';
-  private readonly activityDisturbingOverrides = new Map<string, boolean>();
+  private readonly profileCatalog = profiles;
+  private selectedProfileId: string;
   private scenarioTimer: ReturnType<typeof setInterval> | null = null;
   private activeScenario: { scenario: Scenario; startedAt: number } | null = null;
+  private socialBattery = 0;
 
   constructor(scenarios: Scenario[]) {
     this.scenarios = scenarios;
+    this.selectedProfileId = this.profileCatalog[0].id;
     this.state = this.initialState();
     this.history.push(this.toPoint(this.state));
   }
 
   private initialState(): BridgeState {
-    const now = Date.now();
+    const profile = this.getSelectedProfile();
     return {
       cellphone: {
-        noiseLevel: 45,
-        dateTime: new Date().toISOString()
+        noiseLevel: profile.initialNoiseLevel,
+        dateTime: profile.initialDateTime
       },
-      sensor: { pulse: 60 },
-      socialBattery: 100,
-      activity: ''
+      sensor: { pulse: profile.initialPulse },
+      socialBattery: this.socialBattery,
+      selectedProfileId: profile.id,
+      profile: this.toPublicProfile(profile)
     };
   }
 
-  private initialActivities(now: number): Activity[] {
-    const activities: Activity[] = [
-      {
-        id: 'activity-before',
-        name: 'Trabajo concentrado',
-        description: 'Bloque de trabajo individual que requiere atención sostenida.',
-        canBeDisturbing: true,
-        dateTime: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
-        duration: 2
-      },
-      {
-        id: 'activity-current',
-        name: 'Encuentro social',
-        description: 'Reunión con otras personas para conversar y compartir un espacio.',
-        canBeDisturbing: true,
-        dateTime: new Date(now).toISOString(),
-        duration: 2
-      },
-      {
-        id: 'activity-after',
-        name: 'Presentación',
-        description: 'Exposición oral frente a un grupo de personas.',
-        canBeDisturbing: true,
-        dateTime: new Date(now + 3 * 60 * 60 * 1000).toISOString(),
-        duration: 2
-      }
-    ];
-    return activities.map(activity => {
-      const canBeDisturbing = this.activityDisturbingOverrides.get(activity.id);
-      return {
+  private getSelectedProfile(): ProfileSeed {
+    return this.profileCatalog.find(profile => profile.id === this.selectedProfileId) ?? this.profileCatalog[0];
+  }
+
+  getProfiles(): NeurodivergentProfile[] {
+    return this.profileCatalog.map(profile => this.toPublicProfile(profile, new Date()));
+  }
+
+  private toPublicProfile(
+    { initialPulse: _initialPulse, initialNoiseLevel: _initialNoiseLevel, initialDateTime: _initialDateTime, ...profile }: ProfileSeed,
+    consumedAt = new Date()
+  ): NeurodivergentProfile {
+    const currentDate = formatDate(consumedAt);
+    return {
+      ...profile,
+      activities: profile.activities.map(activity => ({
         ...activity,
-        ...(canBeDisturbing === undefined ? {} : { canBeDisturbing })
-      };
-    });
+        date: currentDate
+      }))
+    };
+  }
+
+  selectProfile(profileId: string): BridgeState {
+    if (!this.profileCatalog.some(profile => profile.id === profileId)) {
+      throw new Error(`Perfil desconocido: ${profileId}`);
+    }
+    this.stopScenario();
+    this.selectedProfileId = profileId;
+    this.state = this.initialState();
+    this.history = [this.toPoint(this.state)];
+    return this.getCurrent();
   }
 
   private toPoint(s: BridgeState): HistoryPoint {
@@ -75,18 +77,20 @@ class Simulator {
     };
   }
 
-  setData(state: BridgeState & { selectedActivity?: string }) {
+  setData(state: BridgeState) {
     this.stopScenario();
-    const { selectedActivity: _selectedActivity, ...data } = state;
+    const { selectedProfileId: _selectedProfileId, profile: _profile, socialBattery: _socialBattery, ...data } = state;
     this.state = {
       ...data,
-      socialBattery: data.socialBattery ?? this.state.socialBattery,
-      activity: this.state.activity
+      socialBattery: this.socialBattery,
+      selectedProfileId: this.selectedProfileId,
+      profile: this.toPublicProfile(this.getSelectedProfile())
     };
     this.recordState();
   }
 
   setSocialBattery(value: number) {
+    this.socialBattery = value;
     this.state = {
       ...this.state,
       socialBattery: value,
@@ -99,27 +103,17 @@ class Simulator {
   }
 
   getCurrent(): BridgeState {
-    const activities = this.initialActivities(Date.now());
-    const selectedActivity = activities.find(activity => activity.id === this.selectedActivityId) ?? '';
+    const consumedAt = new Date();
     this.state = {
       ...this.state,
-      activity: selectedActivity
+      cellphone: {
+        ...this.state.cellphone,
+        dateTime: withCurrentDate(this.state.cellphone.dateTime, consumedAt)
+      },
+      selectedProfileId: this.selectedProfileId,
+      profile: this.toPublicProfile(this.getSelectedProfile(), consumedAt)
     };
     return this.state;
-  }
-
-  getActivities(): Activity[] {
-    return this.initialActivities(Date.now());
-  }
-
-  selectActivity(activityId: string) {
-    this.selectedActivityId = activityId;
-  }
-
-  setActivitySettings(activityId: string, settings: { canBeDisturbing: boolean }) {
-    const activity = this.initialActivities(Date.now()).find(candidate => candidate.id === activityId);
-    if (!activity) throw new Error(`Actividad desconocida: ${activityId}`);
-    this.activityDisturbingOverrides.set(activityId, settings.canBeDisturbing);
   }
   getHistory(): HistoryPoint[] { return this.history; }
 

@@ -7,14 +7,21 @@ const emit = defineEmits<{ update: [patch: { cellphone: CellphoneData }] }>();
 function update(field: keyof CellphoneData, value: string) {
   if (!props.data) return;
   const cellphone = { ...props.data, [field]: Number(value) };
-  if (field === 'dateTime') cellphone.dateTime = new Date(value).toISOString();
+  if (field === 'dateTime') {
+    const currentDate = new Date().toISOString().slice(0, 10);
+    cellphone.dateTime = `${currentDate}T${value}:00`;
+  }
   emit('update', { cellphone });
+}
+
+function timeValue(dateTime: string | undefined): string {
+  return dateTime?.match(/T(\d{2}:\d{2})/)?.[1] ?? '';
 }
 </script>
 
 <template>
   <section class="card">
-    <div class="title">Sector 1 · Entorno</div>
+    <div class="title">Dispositivo móvil</div>
 
     <div class="label">Nivel de ruido</div>
     <div class="noise">
@@ -25,8 +32,8 @@ function update(field: keyof CellphoneData, value: string) {
               :value="data?.noiseLevel ?? 0" @change="update('noiseLevel', ($event.target as HTMLInputElement).value)" />
     <div class="range-hint"><span>Bajo</span><span>Alto</span></div>
 
-    <div class="label">Fecha y hora</div>
-    <input class="value-box" type="datetime-local" :value="data?.dateTime.slice(0, 16)" @change="update('dateTime', ($event.target as HTMLInputElement).value)" />
+    <div class="label">Hora</div>
+    <input class="value-box" type="time" :value="timeValue(data?.dateTime)" @change="update('dateTime', ($event.target as HTMLInputElement).value)" />
   </section>
 </template>
 
@@ -51,5 +58,6 @@ function update(field: keyof CellphoneData, value: string) {
 .value-box {
   background: #0e1428; border: 1px solid var(--line);
   padding: 10px 12px; border-radius: 8px; font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 </style>

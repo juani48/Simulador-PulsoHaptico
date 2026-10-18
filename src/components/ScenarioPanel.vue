@@ -42,7 +42,7 @@ function scenarioValues(scenario: Scenario) {
 
 <template>
   <section class="card scenario-card">
-    <div class="title">Escenarios · Simulación guiada</div>
+    <div class="title">Escenarios basados en personas neurodivergentes</div>
     <div v-if="!scenarios.length" class="empty">No hay escenarios disponibles.</div>
     <div v-else class="scenario-list">
       <article v-for="scenario in scenarios" :key="scenario.id" class="scenario">
@@ -90,8 +90,8 @@ function scenarioValues(scenario: Scenario) {
 
 <style scoped>
 .scenario-card { height: 100%; }
-.scenario-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-content: start; gap: 12px; padding: 2px; }
-.scenario { display: flex; min-width: 0; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.scenario-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 14px 22px; padding: 8px 2px; }
+.scenario { display: flex; min-width: 0; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
 .scenario-preview { display: grid; place-items: center; flex: 0 0 105px; min-height: 90px; border-radius: 8px; background: #0e1428; color: var(--muted); font-size: 11px; text-align: center; }
 .scenario-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
 .scenario-content { flex: 1; }
@@ -109,5 +109,5 @@ p { margin: 7px 0 12px; color: var(--muted); font-size: 13px; }
 .progress-value { height: 100%; border-radius: inherit; background: var(--accent-2); transition: width .3s; }
 .active-sequence-image { width: 100%; max-height: 150px; margin-bottom: 10px; border-radius: 8px; object-fit: cover; }
 .empty { color: var(--muted); }
-@media (max-width: 560px) { .scenario-list { grid-template-columns: 1fr; } .scenario { flex-direction: column; } .scenario-preview { flex-basis: 80px; } }
+@media (max-width: 700px) { .scenario-list { grid-template-columns: 1fr; } .scenario { flex-direction: column; } .scenario-preview { flex-basis: 80px; } }
 </style>

@@ -4,19 +4,35 @@ export interface CellphoneData {
 }
 
 export interface SensorData { pulse: number; }
-export interface Activity {
+export interface ProfileActivity {
   id: string;
   name: string;
-  description: string;
-  canBeDisturbing: boolean;
-  dateTime: string;
-  duration: number;
+  type: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  canGiveNotice: boolean;
+}
+export interface RegulationConfig {
+  mode: 'autorregulación' | 'prevención';
+  condition: string;
+  strategies: string[];
+}
+export interface NeurodivergentProfile {
+  id: string;
+  name: string;
+  homeConfig: string;
+  homeMessage?: string;
+  activities: ProfileActivity[];
+  dysregulators: string[];
+  regulation: RegulationConfig;
 }
 export interface BridgeState {
   cellphone: CellphoneData;
   sensor: SensorData;
   socialBattery: number;
-  activity: Activity | '';
+  selectedProfileId: string;
+  profile: NeurodivergentProfile;
 }
 
 export interface HistoryPoint {

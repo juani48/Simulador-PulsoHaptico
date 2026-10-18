@@ -14,14 +14,14 @@ html, body, #app { height: 100%; margin: 0; }
 body {
   background: radial-gradient(1200px 800px at 20% -10%, #1a2547 0%, var(--bg) 60%);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
 .card {
   background: linear-gradient(180deg, var(--card), var(--card-2));
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 10px;
+  padding: 20px;
 }
 
 .title {
@@ -29,4 +29,7 @@ body {
   color: #cfd8f3;
   border-bottom: 1px solid var(--line);
   padding-bottom: 10px;
+  letter-spacing: .02em;
 }
+
+button, input { font: inherit; }

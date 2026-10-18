@@ -11,7 +11,7 @@ function updatePulse(value: string) {
 
 <template>
   <section class="card">
-    <div class="title">Sector 2 · Pulso simulado</div>
+    <div class="title">Dispositivo sensado</div>
 
     <div class="pulse">
       <span class="pulse-unit">Frecuencia cardíaca</span>

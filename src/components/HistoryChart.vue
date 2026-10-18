@@ -46,13 +46,11 @@ const noiseChartData = computed(() => ({
 
 const socialBatteryState = computed(() => {
   const states = [
-    { face: '😫', label: 'Muy cansado' },
-    { face: '😩', label: 'Cansado' },
-    { face: '😞', label: 'Bajo' },
-    { face: '😐', label: 'Regular' },
-    { face: '🙂', label: 'Bien' },
-    { face: '😊', label: 'Muy bien' },
-    { face: '😄', label: 'Excelente' }
+    { tone: 'very-low', label: 'Muy cansado' },
+    { tone: 'low', label: 'Cansado' },
+    { tone: 'regular', label: 'Regular' },
+    { tone: 'good', label: 'Bien' },
+    { tone: 'very-good', label: 'Muy bien' }
   ];
   const index = Math.min(states.length - 1, Math.floor(
     Math.max(0, Math.min(100, props.socialBattery)) / (100 / states.length)
@@ -80,7 +78,21 @@ const chartOptions = {
     <div class="context-strip">
       <div class="context-item social-summary">
         <span class="context-label">Batería social</span>
-        <span class="social-face" aria-hidden="true">{{ socialBatteryState.face }}</span>
+        <svg
+          class="social-face"
+          :class="socialBatteryState.tone"
+          viewBox="0 0 40 40"
+          role="img"
+          :aria-label="socialBatteryState.label"
+        >
+          <circle cx="20" cy="20" r="17" />
+          <circle class="eye" cx="14" cy="16" r="1.5" />
+          <circle class="eye" cx="26" cy="16" r="1.5" />
+          <path v-if="socialBatteryState.tone === 'very-low'" class="mouth" d="M14 27 Q20 22 26 27" />
+          <path v-else-if="socialBatteryState.tone === 'low'" class="mouth" d="M14 26 Q20 23 26 26" />
+          <path v-else-if="socialBatteryState.tone === 'regular'" class="mouth" d="M14 26 H26" />
+          <path v-else class="mouth" d="M14 24 Q20 29 26 24" />
+        </svg>
         <strong>{{ socialBatteryState.label }}</strong>
       </div>
       <div class="context-item">
@@ -129,7 +141,7 @@ const chartOptions = {
 .context-item strong { font-size: 17px; }
 .context-item small, .context-value { color: var(--muted); font-size: 11px; }
 .social-summary { align-items: center; border-right: 1.5px solid var(--line); }
-.social-summary .social-face { font-size: 29px; }
+.social-face { margin: 4px 0; }
 .context-action { border-left: 1.5px solid var(--line); }
 .social-status {
   display: flex;
@@ -140,7 +152,18 @@ const chartOptions = {
   gap: 2px;
   color: var(--muted);
 }
-.social-face { font-size: 35px; line-height: 1; }
+.social-face {
+  width: 36px;
+  height: 36px;
+  overflow: visible;
+}
+.social-face circle:first-child { stroke: rgba(27, 35, 58, .24); stroke-width: 1; }
+.social-face .eye, .social-face .mouth { fill: none; stroke: #33404a; stroke-linecap: round; stroke-width: 1.7; }
+.social-face .eye { fill: #33404a; stroke: none; }
+.social-face.very-low circle:first-child, .social-face.low circle:first-child { fill: #adb6b7; }
+.social-face.regular circle:first-child { fill: #fff; stroke: #9ba9ac; stroke-width: 1.5; }
+.social-face.good circle:first-child { fill: #b9e6c5; }
+.social-face.very-good circle:first-child { fill: #70c789; }
 .social-status strong { color: var(--text); font-size: 11px; }
 .social-status span:last-child { font-size: 11px; }
 @media (max-width: 780px) {

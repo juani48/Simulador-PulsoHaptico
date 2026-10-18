@@ -12,9 +12,14 @@ export interface ProfileActivity {
   endTime: string;
   canGiveNotice: boolean;
 }
+export interface RegulationCondition {
+  value: 'pulse' | 'noiseLevel';
+  operator: '>' | '>=' | '<' | '<=';
+  threshold: number;
+}
 export interface RegulationConfig {
-  mode: 'autorregulación' | 'prevención';
-  condition: string;
+  mode: 'regulation' | 'prevention';
+  condition: RegulationCondition[];
   strategies: string[];
 }
 export interface NeurodivergentProfile {

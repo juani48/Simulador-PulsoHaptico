@@ -117,7 +117,7 @@ La API expone estos endpoints públicos para consumo desde otra aplicación:
 
 | Metodo | Ruta | Descripcion |
 | --- | --- | --- |
-| `GET` | `/api/data` | Obtiene el estado actual y el perfil seleccionado |
+| `GET` | `/api/data` | Obtiene el estado actual y el perfil seleccionado, incluidos sus factores desreguladores y estrategias |
 | `PUT` | `/api/data` | Modifica los datos del dispositivo, incluida la hora expuesta |
 | `GET` | `/api/profiles` | Lista los perfiles de personas neurodivergentes |
 | `PUT` | `/api/profile` | Selecciona un perfil y carga sus valores iniciales |
@@ -149,13 +149,30 @@ factores que pueden desregularla y estrategias de autorregulación o prevención
 `PUT /api/profile` recibe `{"profileId": "nd1"}` y reinicia el simulador con los
 valores del dispositivo de ese perfil. En cada respuesta de perfiles, la fecha
 de las actividades se ajusta al día actual; sus horas de inicio y fin no cambian.
-`/api/data` devuelve el perfil seleccionado junto con los valores actuales del
-celular, sensor y batería social. La hora de `cellphone.dateTime` puede
+`GET /api/data` devuelve el perfil seleccionado junto con los valores actuales
+del celular, sensor y batería social. La hora de `cellphone.dateTime` puede
 modificarse mediante `PUT /api/data`; al consumir la respuesta, su día se ajusta
 al día actual y se conserva la hora configurada. El objeto `profile` conserva
-únicamente la configuración de Home, el mensaje, las actividades, los
-desreguladores y la regulación; los valores dinámicos se exponen en los objetos
-`cellphone`, `sensor` y `socialBattery`.
+únicamente la configuración de Home, el mensaje, las actividades, los factores
+desreguladores (`dysregulators`) y la regulación (`regulation`); los valores
+dinámicos se exponen en los objetos `cellphone`, `sensor` y `socialBattery`.
+
+Los factores desreguladores disponibles son: ruido emergente del ambiente,
+murmullo de personas, luces, olores, hablar en público, situaciones no
+planificadas, colores, sociabilizar, discusiones que no llegan a ningún lado,
+texturas, aglomeración de personas, usar calzado (tener el pie encerrado),
+absorber las emociones de otros, poca tolerancia a la frustración, sobrecarga
+de actividades (requieren procesamiento información), deadlines simultáneos y
+situaciones de evaluación.
+
+Las estrategias se expresan en `regulation.strategies` y corresponden a las
+listas de regulación o prevención: brindar lugares de descanso; proponer
+determinados movimientos que son configurables por la persona; proponer
+respiración; proveer música configurada dependiendo de los gustos de la
+persona; proponer pausa consciente; proponer re organizar actividades;
+planificación anticipada de charlas; recordar llevar elementos preventivos; y
+proponer un patrón vibro-táctil. Cada perfil recibe únicamente las estrategias
+configuradas para su modo.
 
 La especificacion completa se puede explorar en Swagger UI.
 

@@ -12,7 +12,7 @@ const openapiDocument = {
       get: {
         tags: ['Simulación'],
         summary: 'Obtiene el estado actual y el perfil seleccionado',
-        description: 'Actualiza la fecha al día actual al responder. La hora configurada se conserva.',
+        description: 'Actualiza la fecha al día actual al responder. La hora configurada se conserva. El perfil incluye los factores desreguladores y las estrategias de regulación o prevención configurados para la persona seleccionada.',
         responses: {
           '200': {
             description: 'Estado actual del celular, sensor y perfil seleccionado',
@@ -121,7 +121,26 @@ const openapiDocument = {
             items: { $ref: '#/components/schemas/ProfileActivity' }
           },
           dysregulators: { type: 'array', items: { type: 'string' } },
-          regulation: { type: 'object', properties: { mode: { type: 'string' }, condition: { type: 'string' }, strategies: { type: 'array', items: { type: 'string' } } } }
+          regulation: {
+            type: 'object',
+            required: ['mode', 'condition', 'strategies'],
+            properties: {
+              mode: { type: 'string', enum: ['regulation', 'prevention'] },
+              condition: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['value', 'operator', 'threshold'],
+                  properties: {
+                    value: { type: 'string', enum: ['pulse', 'noiseLevel'] },
+                    operator: { type: 'string', enum: ['>', '>=', '<', '<='] },
+                    threshold: { type: 'number' }
+                  }
+                }
+              },
+              strategies: { type: 'array', items: { type: 'string' } }
+            }
+          }
         }
       },
       ProfileActivity: {

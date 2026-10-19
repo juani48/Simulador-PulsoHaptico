@@ -11,7 +11,8 @@ class Simulator {
   private readonly profileCatalog = profiles;
   private selectedProfileId: string;
   private scenarioTimer: ReturnType<typeof setInterval> | null = null;
-  private activeScenario: { scenario: Scenario; startedAt: number } | null = null;
+  private activeScenario: { scenario: Scenario; startedAt: number; elapsedSeconds: number; paused: boolean } | null = null;
+  private completedScenario: ScenarioStatus | null = null;
   private socialBattery = 0;
 
   constructor(scenarios: Scenario[]) {
@@ -62,6 +63,7 @@ class Simulator {
       throw new Error(`Perfil desconocido: ${profileId}`);
     }
     this.stopScenario();
+    this.completedScenario = null;
     this.selectedProfileId = profileId;
     this.state = this.initialState();
     this.history = [this.toPoint(this.state)];
@@ -117,42 +119,82 @@ class Simulator {
   }
   getHistory(): HistoryPoint[] { return this.history; }
 
-  getScenarios(): Scenario[] { return this.scenarios; }
+  getScenarios(): Scenario[] {
+    return this.scenarios.filter(scenario => scenario.profileId === this.selectedProfileId);
+  }
 
   getScenarioStatus(): ScenarioStatus {
     if (!this.activeScenario) {
-      return { scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false };
+      return this.completedScenario ?? { scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false, paused: false };
     }
-    const elapsedSeconds = Math.min(
-      Math.floor((Date.now() - this.activeScenario.startedAt) / 1000),
+    const elapsedSeconds = this.activeScenario.paused
+      ? this.activeScenario.elapsedSeconds
+      : Math.min(
+        Math.floor((Date.now() - this.activeScenario.startedAt) / 1000),
       this.activeScenario.scenario.durationSeconds
-    );
+      );
     return {
       scenarioId: this.activeScenario.scenario.id,
       elapsedSeconds,
       totalSeconds: this.activeScenario.scenario.durationSeconds,
-      running: true
+      running: true,
+      paused: this.activeScenario.paused,
+      currentStage: this.getStage(
+        this.activeScenario.scenario,
+        Math.min(elapsedSeconds, this.activeScenario.scenario.durationSeconds - 1)
+      )
     };
   }
 
   startScenario(id: string): ScenarioStatus {
-    const scenario = this.scenarios.find(candidate => candidate.id === id);
+    const scenario = this.getScenarios().find(candidate => candidate.id === id);
     if (!scenario) throw new Error(`Escenario desconocido: ${id}`);
 
     this.stopScenario();
-    this.activeScenario = { scenario, startedAt: Date.now() };
+    this.completedScenario = null;
+    this.activeScenario = { scenario, startedAt: Date.now(), elapsedSeconds: 0, paused: false };
     this.applyScenarioSecond(0);
     this.scenarioTimer = setInterval(() => this.advanceScenario(), 1000);
     return this.getScenarioStatus();
   }
 
+  toggleScenarioPause(): ScenarioStatus {
+    if (!this.activeScenario) return this.getScenarioStatus();
+    if (this.activeScenario.paused) {
+      this.activeScenario.startedAt = Date.now() - this.activeScenario.elapsedSeconds * 1000;
+      this.activeScenario.paused = false;
+    } else {
+      this.activeScenario.elapsedSeconds = Math.min(
+        Math.floor((Date.now() - this.activeScenario.startedAt) / 1000),
+        this.activeScenario.scenario.durationSeconds
+      );
+      this.activeScenario.paused = true;
+    }
+    return this.getScenarioStatus();
+  }
+
+  stopActiveScenario(): ScenarioStatus {
+    this.stopScenario();
+    this.completedScenario = null;
+    return this.getScenarioStatus();
+  }
+
   private advanceScenario() {
-    if (!this.activeScenario) return;
+    if (!this.activeScenario || this.activeScenario.paused) return;
     const elapsedSeconds = Math.floor(
       (Date.now() - this.activeScenario.startedAt) / 1000
     );
     if (elapsedSeconds >= this.activeScenario.scenario.durationSeconds) {
-      this.applyFinalValues(this.activeScenario.scenario);
+      const scenario = this.activeScenario.scenario;
+      this.applyFinalValues(scenario);
+      this.completedScenario = {
+        scenarioId: scenario.id,
+        elapsedSeconds: scenario.durationSeconds,
+        totalSeconds: scenario.durationSeconds,
+        running: false,
+        paused: false,
+        currentStage: this.getStage(scenario, scenario.durationSeconds - 1)
+      };
       this.stopScenario();
       return;
     }
@@ -161,13 +203,7 @@ class Simulator {
 
   private applyScenarioSecond(second: number) {
     if (!this.activeScenario) return;
-    let stageStart = 0;
-    const stage = this.activeScenario.scenario.stages.find(candidate => {
-      const stageEnd = stageStart + candidate.durationSeconds;
-      const matches = second >= stageStart && second < stageEnd;
-      stageStart = stageEnd;
-      return matches;
-    });
+    const stage = this.getStage(this.activeScenario.scenario, second);
     if (!stage) return;
 
     const nextState = structuredClone(this.state);
@@ -176,9 +212,20 @@ class Simulator {
       if (key === 'noiseLevel') nextState.cellphone.noiseLevel = value;
       if (key === 'pulse') nextState.sensor.pulse = value;
     }
+
     nextState.cellphone.dateTime = new Date().toISOString();
     this.state = nextState;
     this.recordState();
+  }
+
+  private getStage(scenario: Scenario, second: number) {
+    let stageStart = 0;
+    return scenario.stages.find(candidate => {
+      const stageEnd = stageStart + candidate.durationSeconds;
+      const matches = second >= stageStart && second < stageEnd;
+      stageStart = stageEnd;
+      return matches;
+    });
   }
 
   private applyFinalValues(scenario: Scenario) {

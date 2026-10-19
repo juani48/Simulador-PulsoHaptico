@@ -176,15 +176,39 @@ const openapiDocument = {
       },
       Scenario: {
         type: 'object',
-        required: ['id', 'name', 'description', 'durationSeconds', 'stages', 'finalValues', 'sequenceImages'],
+        required: ['id', 'profileId', 'name', 'description', 'durationSeconds', 'stages', 'finalValues', 'sequenceImages'],
         properties: {
           id: { type: 'string' },
+          profileId: { type: 'string', description: 'Perfil para el que se muestra este escenario.' },
           name: { type: 'string' },
           description: { type: 'string' },
           durationSeconds: { type: 'integer' },
-          stages: { type: 'array', items: { type: 'object' } },
+          stages: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['name', 'activity', 'description', 'durationSeconds', 'values'],
+              properties: {
+                name: { type: 'string' },
+                activity: { type: 'string' },
+                description: { type: 'string' },
+                durationSeconds: { type: 'integer' },
+                values: { type: 'object' },
+                image: { type: 'string' },
+                alert: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    message: { type: 'string' },
+                    strategies: { type: 'array', items: { type: 'string' } }
+                  }
+                }
+              }
+            }
+          },
           finalValues: { type: 'object' },
           previewImage: { type: 'string' },
+          videoUrl: { type: 'string' },
           sequenceImages: { type: 'array', items: { type: 'string' } }
         }
       }

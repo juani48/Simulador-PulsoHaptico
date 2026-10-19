@@ -44,17 +44,28 @@ export interface HistoryPoint {
 export type ScenarioValue = 'noiseLevel' | 'pulse';
 export interface ValueRange { minimum: number; maximum: number; }
 export interface ScenarioStage {
+  name: string;
+  activity: string;
+  description: string;
   durationSeconds: number;
   values: Partial<Record<ScenarioValue, ValueRange>>;
+  image?: string;
+  alert?: {
+    title: string;
+    message: string;
+    strategies?: string[];
+  };
 }
 export interface Scenario {
   id: string;
+  profileId: string;
   name: string;
   description: string;
   durationSeconds: number;
   stages: ScenarioStage[];
   finalValues: Partial<Record<ScenarioValue, number>>;
   previewImage?: string;
+  videoUrl?: string;
   sequenceImages: string[];
 }
 export interface ScenarioStatus {
@@ -62,4 +73,6 @@ export interface ScenarioStatus {
   elapsedSeconds: number;
   totalSeconds: number;
   running: boolean;
+  paused: boolean;
+  currentStage?: ScenarioStage;
 }

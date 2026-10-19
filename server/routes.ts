@@ -32,6 +32,12 @@ export function createApiRouter(): Router {
       res.status(404).json({ error: error instanceof Error ? error.message : 'Escenario no encontrado' });
     }
   });
+  router.post('/api/scenario-status/pause', (_req, res) => {
+    res.json(simulator.toggleScenarioPause());
+  });
+  router.post('/api/scenario-status/stop', (_req, res) => {
+    res.json(simulator.stopActiveScenario());
+  });
   router.put('/api/data', (req, res) => {
     simulator.setData(req.body);
     res.json(simulator.getCurrent());

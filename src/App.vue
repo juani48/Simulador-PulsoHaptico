@@ -12,8 +12,9 @@ const history = ref<HistoryPoint[]>([]);
 const scenarios = ref<Scenario[]>([]);
 const profiles = ref<NeurodivergentProfile[]>([]);
 const selectedProfileId = ref('');
-const scenarioStatus = ref<ScenarioStatus>({ scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false });
+const scenarioStatus = ref<ScenarioStatus>({ scenarioId: null, elapsedSeconds: 0, totalSeconds: 0, running: false, paused: false });
 const scenarioLoading = ref(false);
+const scenarioActionInFlight = ref(false);
 const carousel = ref<HTMLElement | null>(null);
 const carouselIndex = ref(0);
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
@@ -28,7 +29,7 @@ async function fetchAll() {
     ]);
     state.value = s;
     history.value = h;
-    scenarioStatus.value = status;
+    if (!scenarioActionInFlight.value) scenarioStatus.value = status;
     scenarios.value = availableScenarios;
     profiles.value = availableProfiles;
     selectedProfileId.value = s.selectedProfileId;
@@ -45,6 +46,7 @@ onUnmounted(() => { if (refreshTimer) clearInterval(refreshTimer); });
 
 async function startScenario(id: string) {
   scenarioLoading.value = true;
+  scenarioActionInFlight.value = true;
   try {
     const response = await fetch(`/api/scenarios/${id}/start`, { method: 'POST' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -53,6 +55,7 @@ async function startScenario(id: string) {
     console.error('No se pudo iniciar el escenario', e);
   } finally {
     scenarioLoading.value = false;
+    scenarioActionInFlight.value = false;
   }
 }
 async function updateState(patch: Partial<BridgeState>) {
@@ -90,9 +93,37 @@ async function selectProfile(profileId: string) {
         state.value = await response.json();
         selectedProfileId.value = profileId;
         history.value = await fetch('/api/history').then(r => r.json());
+        scenarios.value = await fetch('/api/scenarios').then(r => r.json());
+        scenarioStatus.value = await fetch('/api/scenario-status').then(r => r.json());
       } catch (e) {
         console.error('No se pudo cargar el perfil', e);
     }
+}
+
+async function toggleScenarioPause() {
+        scenarioActionInFlight.value = true;
+        try {
+        const response = await fetch('/api/scenario-status/pause', { method: 'POST' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        scenarioStatus.value = await response.json();
+      } catch (e) {
+        console.error('No se pudo pausar el escenario', e);
+      } finally {
+        scenarioActionInFlight.value = false;
+      }
+}
+
+async function stopScenario() {
+      scenarioActionInFlight.value = true;
+      try {
+        const response = await fetch('/api/scenario-status/stop', { method: 'POST' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        scenarioStatus.value = await response.json();
+      } catch (e) {
+        console.error('No se pudo salir del escenario', e);
+      } finally {
+        scenarioActionInFlight.value = false;
+      }
 }
 
 function goToCarousel(index: number) {
@@ -123,7 +154,14 @@ function goToCarousel(index: number) {
       <div class="carousel-shell">
         <div ref="carousel" class="carousel" aria-label="Controles de simulación">
         <div class="carousel-item">
-          <ScenarioPanel :scenarios="scenarios" :status="scenarioStatus" :loading="scenarioLoading" @start="startScenario" />
+          <ScenarioPanel
+            :scenarios="scenarios"
+            :status="scenarioStatus"
+            :loading="scenarioLoading"
+            @start="startScenario"
+            @pause="toggleScenarioPause"
+            @stop="stopScenario"
+          />
         </div>
         <div class="carousel-item data-item">
           <CellphonePanel :data="state?.cellphone ?? null" @update="updateState" />
@@ -196,12 +234,13 @@ function goToCarousel(index: number) {
 .carousel-shell {
   width: 100%;
   min-width: 0;
-  height: 440px;
+  height: auto;
 }
 .carousel {
   display: flex;
   gap: 18px;
-  height: calc(100% - 42px);
+  height: auto;
+  min-height: 560px;
   min-width: 0;
   overflow: hidden;
   scroll-snap-type: x mandatory;
@@ -211,7 +250,8 @@ function goToCarousel(index: number) {
 }
 .carousel-item {
   flex: 0 0 100%;
-  height: 100%;
+  height: auto;
+  min-height: 560px;
   min-width: 0;
   scroll-snap-align: start;
 }

@@ -21,10 +21,24 @@ const activeSequenceImage = computed(() => {
   const position = props.status.elapsedSeconds / props.status.totalSeconds;
   return sequence[Math.min(Math.floor(position * sequence.length), sequence.length - 1)];
 });
+
+function syncVideoPosition() {
+  if (!video.value || !props.status.totalSeconds || !Number.isFinite(video.value.duration)) return;
+  video.value.currentTime = Math.min(
+    (props.status.elapsedSeconds / props.status.totalSeconds) * video.value.duration,
+    video.value.duration
+  );
+}
+
 watch(() => props.status.paused, paused => {
   if (!video.value) return;
-  if (paused) video.value.pause();
-  else void video.value.play();
+  if (paused) {
+    syncVideoPosition();
+    video.value.pause();
+  } else {
+    syncVideoPosition();
+    void video.value.play();
+  }
 });
 </script>
 
@@ -62,6 +76,7 @@ watch(() => props.status.paused, paused => {
           muted
           loop
           playsinline
+          @loadedmetadata="syncVideoPosition"
         />
         <img v-else-if="activeSequenceImage" class="active-sequence-image" :src="activeSequenceImage" alt="Paso actual del escenario" />
         <div v-else class="scenario-video-placeholder">
@@ -72,11 +87,8 @@ watch(() => props.status.paused, paused => {
       <div class="active-details">
         <div v-if="activeScenario" class="scenario-heading">
           <strong>{{ activeScenario.name }}</strong>
-          <span>{{ activeScenario.description }}</span>
         </div>
         <div v-if="activeStage" class="stage-info">
-          <strong>{{ activeStage.name }}</strong>
-          <span class="stage-activity">{{ activeStage.activity }}</span>
           <span>{{ activeStage.description }}</span>
         </div>
         <div class="progress-label">
@@ -161,8 +173,6 @@ h2 { margin: 0; font-size: 15px; line-height: 1.4; }
 .scenario-heading strong { color: var(--text); font-size: 24px; line-height: 1.2; }
 .scenario-heading span { color: var(--muted); font-size: 17px; line-height: 1.4; }
 .stage-info { display: grid; gap: 7px; margin-bottom: 10px; color: var(--muted); font-size: 16px; text-align: center; }
-.stage-info strong { color: var(--accent); font-size: 22px; }
-.stage-activity { color: var(--text); font-size: 17px; }
 .scenario-alert { display: grid; gap: 5px; margin-bottom: 10px; padding: 11px; border: 1px solid var(--warn); border-radius: 8px; background: rgba(255, 138, 61, .12); color: var(--text); }
 .scenario-alert span, .scenario-alert li { color: var(--muted); font-size: 12px; }
 .scenario-alert ul { margin: 2px 0 0; padding-left: 18px; }

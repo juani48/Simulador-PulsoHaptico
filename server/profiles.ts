@@ -19,7 +19,7 @@ export const profiles: ProfileSeed[] = [
       { id: 'nd1-reunion-investigacion', name: 'Reunión de Investigación', type: 'Reunión - Trabajo', date: '2026-10-22', startTime: '11:00', endTime: '12:00', canGiveNotice: false }
     ],
     dysregulators: ['Ruido emergente del ambiente', 'Murmullo de personas', 'Hablar en público', 'Situaciones no planificadas', 'Sociabilizar', 'Discusiones que no llegan a ningún lado'],
-    regulation: { mode: 'regulation', condition: [ { value: 'pulse', operator: '>', threshold: 75 } ], strategies: ['Proponer respiración (podría haber varias)'] }
+    regulation: { mode: 'regulation', condition: [ { value: 'pulse', operator: '>', threshold: 75 } ], strategies: ['Proponer respiración.'] }
   },
   {
     id: 'nd2',
@@ -33,7 +33,7 @@ export const profiles: ProfileSeed[] = [
       { id: 'nd2-evento-universidad', name: 'Evento de la Universidad', type: 'Evento/Difusion', date: '2026-10-22', startTime: '18:00', endTime: '19:00', canGiveNotice: true }
     ],
     dysregulators: ['Ruido emergente del ambiente', 'Murmullo de personas', 'Hablar en público', 'Aglomeración de personas', 'Absorber las emociones de otros'],
-    regulation: { mode: 'prevention', condition: [ { value: 'pulse', operator: '>', threshold: 75 } ], strategies: ['Proveer música configurada dependiendo de los gustos de la persona.', 'Proponer determinados movimientos que son configurables por la persona.', 'Proponer un patrón vibro-táctil (que se puedan elegir dentro de los que son agradables para la persona).'] }
+    regulation: { mode: 'prevention', condition: [ { value: 'pulse', operator: '>', threshold: 75 } ], strategies: ['Proveer música.', 'Proponer movimientos.', 'Proponer un patrón vibro-táctil.'] }
   },
   {
     id: 'nd3',
@@ -48,6 +48,6 @@ export const profiles: ProfileSeed[] = [
       { id: 'nd3-reunion-investigacion', name: 'Reunión de Investigación', type: 'Reunión - Trabajo', date: '2026-10-22', startTime: '13:00', endTime: '14:00', canGiveNotice: true }
     ],
     dysregulators: ['Ruido emergente del ambiente', 'Murmullo de personas', 'Hablar en público', 'Situaciones no planificadas', 'Deadlines simultáneos', 'Situaciones de evaluación'],
-    regulation: { mode: 'prevention', condition: [ { value: "pulse", operator: ">", threshold: 75 } ], strategies: ['Proponer respiración (podría haber varias, ejemplo diafragmática)'] }
+    regulation: { mode: 'prevention', condition: [ { value: "pulse", operator: ">", threshold: 75 } ], strategies: ['Proponer respiración.'] }
   }
 ];

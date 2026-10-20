@@ -55,11 +55,11 @@ const noiseChartData = computed(() => ({
 
 const socialBatteryState = computed(() => {
   const states = [
-    { tone: 'very-low', label: 'sin nada' },
-    { tone: 'low', label: 'poco' },
-    { tone: 'regular', label: 'media' },
-    { tone: 'good', label: 'bastante' },
-    { tone: 'very-good', label: 'mucha' }
+    { tone: 'very-low', label: 'Sin nada' },
+    { tone: 'low', label: 'Poca' },
+    { tone: 'regular', label: 'Media' },
+    { tone: 'good', label: 'Bastante' },
+    { tone: 'very-good', label: 'Mucha' }
   ];
   const index = Math.min(states.length - 1, Math.floor(
     Math.max(0, Math.min(100, props.socialBattery)) / (100 / states.length)
@@ -116,7 +116,6 @@ const chartOptions = {
           <path v-else-if="socialBatteryState.tone === 'regular'" class="mouth" d="M14 26 H26" />
           <path v-else class="mouth" d="M14 24 Q20 29 26 24" />
         </svg>
-        <strong>{{ socialBatteryState.label }}</strong>
       </div>
       <div class="context-item">
         <span class="context-label">Actividad actual</span>
@@ -192,7 +191,6 @@ const chartOptions = {
 .context-label { color: var(--muted); font-size: 11px; }
 .context-item strong { font-size: 15px; }
 .social-summary { align-items: center; }
-.social-face { margin: 4px 0; }
 .date-row {
   display: grid;
   grid-column: 1;
@@ -223,13 +221,13 @@ const chartOptions = {
   height: 30px;
   overflow: visible;
 }
-.social-face circle:first-child { stroke: rgba(27, 35, 58, .24); stroke-width: 1; }
+.social-face circle:first-child { stroke: none; }
 .social-face .eye, .social-face .mouth { fill: none; stroke: #33404a; stroke-linecap: round; stroke-width: 1.7; }
 .social-face .eye { fill: #33404a; stroke: none; }
 .social-face.very-low circle:first-child, .social-face.low circle:first-child { fill: #adb6b7; }
-.social-face.regular circle:first-child { fill: #fff; stroke: #9ba9ac; stroke-width: 1.5; }
-.social-face.good circle:first-child { fill: #b9e6c5; }
-.social-face.very-good circle:first-child { fill: #70c789; }
+.social-face.regular circle:first-child { fill: #edf4f4; }
+.social-face.good circle:first-child { fill: #b8e9ed; }
+.social-face.very-good circle:first-child { fill: #2ca1a8; }
 .social-status strong { color: var(--text); font-size: 11px; }
 .social-status span:last-child { font-size: 11px; }
 @media (max-width: 780px) {

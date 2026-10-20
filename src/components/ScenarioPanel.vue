@@ -40,14 +40,14 @@ watch(() => props.status.paused, paused => {
         </div>
         <div class="scenario-name">
           <h2>{{ scenario.name }}</h2>
-          <span>{{ scenario.stages[0]?.activity ?? 'Escenario' }}</span>
+          <span class="scenario-description">{{ scenario.description }}</span>
         </div>
         <button
           class="scenario-button"
           :disabled="loading || status.running"
           @click="emit('start', scenario.id)"
         >
-          {{ status.scenarioId === scenario.id && status.running ? 'En ejecución…' : 'Ejecutar escenario' }}
+          {{ status.scenarioId === scenario.id && status.running ? 'En ejecución…' : 'Iniciar' }}
         </button>
       </article>
     </div>
@@ -70,8 +70,13 @@ watch(() => props.status.paused, paused => {
         </div>
       </div>
       <div class="active-details">
+        <div v-if="activeScenario" class="scenario-heading">
+          <strong>{{ activeScenario.name }}</strong>
+          <span>{{ activeScenario.description }}</span>
+        </div>
         <div v-if="activeStage" class="stage-info">
-          <strong>{{ activeStage.activity }}</strong>
+          <strong>{{ activeStage.name }}</strong>
+          <span class="stage-activity">{{ activeStage.activity }}</span>
           <span>{{ activeStage.description }}</span>
         </div>
         <div class="progress-label">
@@ -94,7 +99,7 @@ watch(() => props.status.paused, paused => {
 
 <style scoped>
 .scenario-card { height: 100%; min-height: 0; overflow-y: auto; }
-.scenario-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 10px 16px; padding: 5px 2px; }
+.scenario-list { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; padding: 5px 2px; }
 .scenario {
   display: grid;
   grid-template-columns: 124px minmax(0, 1fr) auto;
@@ -120,8 +125,11 @@ watch(() => props.status.paused, paused => {
 .scenario-preview img { width: 100%; height: 100%; object-fit: contain; }
 .scenario-name { display: grid; gap: 3px; min-width: 0; }
 h2 { margin: 0; font-size: 15px; line-height: 1.4; }
-.scenario-name span { color: var(--muted); font-size: 13px; }
+.scenario-name span { color: var(--muted); }
+.scenario-description { font-size: 15px; line-height: 1.35; }
 .scenario-button {
+  width: clamp(125px, 14vw, 170px);
+  min-height: 34px;
   flex-shrink: 0;
   border: 0;
   border-radius: 7px;
@@ -130,6 +138,7 @@ h2 { margin: 0; font-size: 15px; line-height: 1.4; }
   background: var(--accent-2);
   font-weight: 700;
   cursor: pointer;
+  white-space: normal;
 }
 .scenario-button:disabled { opacity: .5; cursor: not-allowed; }
 .progress { margin-top: 16px; color: var(--muted); font-size: 12px; }
@@ -148,8 +157,12 @@ h2 { margin: 0; font-size: 15px; line-height: 1.4; }
 .scenario-video { background: #0e1428; object-fit: contain; }
 .scenario-video-placeholder { display: grid; place-items: center; align-content: center; gap: 5px; background: #0e1428; color: var(--muted); }
 .scenario-video-placeholder strong { color: var(--text); font-size: 18px; }
-.stage-info { display: grid; gap: 4px; margin-bottom: 10px; color: var(--muted); font-size: 13px; }
-.stage-info strong { color: var(--accent); }
+.scenario-heading { display: grid; gap: 7px; margin-bottom: 14px; text-align: center; }
+.scenario-heading strong { color: var(--text); font-size: 24px; line-height: 1.2; }
+.scenario-heading span { color: var(--muted); font-size: 17px; line-height: 1.4; }
+.stage-info { display: grid; gap: 7px; margin-bottom: 10px; color: var(--muted); font-size: 16px; text-align: center; }
+.stage-info strong { color: var(--accent); font-size: 22px; }
+.stage-activity { color: var(--text); font-size: 17px; }
 .scenario-alert { display: grid; gap: 5px; margin-bottom: 10px; padding: 11px; border: 1px solid var(--warn); border-radius: 8px; background: rgba(255, 138, 61, .12); color: var(--text); }
 .scenario-alert span, .scenario-alert li { color: var(--muted); font-size: 12px; }
 .scenario-alert ul { margin: 2px 0 0; padding-left: 18px; }
@@ -160,11 +173,19 @@ h2 { margin: 0; font-size: 15px; line-height: 1.4; }
   .scenario-list { grid-template-columns: 1fr; }
   .scenario { grid-template-columns: 104px minmax(0, 1fr); }
   .scenario-preview { width: 104px; height: 82px; }
-  .scenario-button { grid-column: 2; justify-self: start; }
+  .scenario-button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
   .active-scenario { grid-template-columns: 1fr; }
   .active-media { grid-column: 1; grid-row: 1; }
   .active-details { grid-column: 1; grid-row: 2; }
   .carousel-item, .carousel { min-height: 0; }
   .scenario-card { min-height: 0; }
+}
+@media (max-width: 420px) {
+  .scenario { grid-template-columns: 1fr; }
+  .scenario-preview { width: 100%; height: 120px; }
 }
 </style>

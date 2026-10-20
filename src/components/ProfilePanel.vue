@@ -7,12 +7,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ select: [profileId: string] }>();
-
-function profileDescription(profile: NeurodivergentProfile): string {
-  const regulation = profile.regulation.mode === 'prevention' ? 'Prevención' : 'Regulación';
-  const sensitivity = profile.dysregulators[0]?.replace('Ruido emergente del ambiente', 'ruido') ?? 'entorno';
-  return `${regulation} · Sensible a ${sensitivity.toLowerCase()}`;
-}
 </script>
 
 <template>
@@ -35,7 +29,6 @@ function profileDescription(profile: NeurodivergentProfile): string {
         />
         <span>
           <strong>{{ profile.name }}</strong>
-          <small>{{ profileDescription(profile) }}<template v-if="profile.homeMessage"> · {{ profile.homeMessage }}</template></small>
         </span>
       </label>
     </div>

@@ -55,11 +55,11 @@ const noiseChartData = computed(() => ({
 
 const socialBatteryState = computed(() => {
   const states = [
-    { tone: 'very-low', label: 'Muy cansado' },
-    { tone: 'low', label: 'Cansado' },
-    { tone: 'regular', label: 'Regular' },
-    { tone: 'good', label: 'Bien' },
-    { tone: 'very-good', label: 'Muy bien' }
+    { tone: 'very-low', label: 'sin nada' },
+    { tone: 'low', label: 'poco' },
+    { tone: 'regular', label: 'media' },
+    { tone: 'good', label: 'bastante' },
+    { tone: 'very-good', label: 'mucha' }
   ];
   const index = Math.min(states.length - 1, Math.floor(
     Math.max(0, Math.min(100, props.socialBattery)) / (100 / states.length)
@@ -184,6 +184,7 @@ const chartOptions = {
 .context-item {
   display: flex; flex-direction: column; justify-content: center; gap: 3px;
   min-height: 76px; padding: 12px 14px;
+  text-align: center;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(14, 20, 40, .35);

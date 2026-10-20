@@ -23,7 +23,7 @@ export function loadScenarios(): Scenario[] {
       id: 'nd1-escenario-1',
       profileId: 'nd1',
       name: 'ND1 · Escenario 1',
-      description: 'Dar una conferencia, atravesar un balanceo automático y recuperar la regulación al finalizar.',
+      description: 'Conferencia y regulación.',
       durationSeconds: 32,
       stages: [
         stage('Conferencia', 'Dar conferencia', 'La persona comienza a dar una conferencia.', 8, {
@@ -51,7 +51,7 @@ export function loadScenarios(): Scenario[] {
       id: 'nd1-escenario-2',
       profileId: 'nd1',
       name: 'ND1 · Escenario 2',
-      description: 'Participar en una reunión del grupo de investigación y regularse al finalizar.',
+      description: 'Reunión de investigación y regulación.',
       durationSeconds: 24,
       stages: [
         stage('Reunión de investigación', 'Reunión de Investigación', 'La persona participa en una reunión de su grupo de investigación. Aumenta el ruido ambiente.', 16, {
@@ -71,7 +71,7 @@ export function loadScenarios(): Scenario[] {
       id: 'nd2-escenario-3',
       profileId: 'nd2',
       name: 'ND2 · Escenario 3',
-      description: 'Dar una clase y elegir una estrategia esquemática de regulación al finalizar.',
+      description: 'Clase y estrategias de regulación.',
       durationSeconds: 24,
       stages: [
         stage('Clase', 'Dar clase', 'La persona comienza a dar una clase y aumenta el nivel de ruido ambiente.', 16, {
@@ -91,7 +91,7 @@ export function loadScenarios(): Scenario[] {
       id: 'nd2-escenario-4',
       profileId: 'nd2',
       name: 'ND2 · Escenario 4',
-      description: 'Participar en un evento social de la universidad y revisar estrategias de regulación.',
+      description: 'Evento universitario y regulación.',
       durationSeconds: 18,
       stages: [
         stage('Evento universitario', 'Evento/Difusión', 'La persona participa en un evento social de la universidad. Aumenta el ruido ambiente.', 18, {
@@ -107,7 +107,7 @@ export function loadScenarios(): Scenario[] {
       id: 'nd3-escenario-5',
       profileId: 'nd3',
       name: 'ND3 · Escenario 5',
-      description: 'Asistir a una charla magistral y realizar respiración diafragmática.',
+      description: 'Charla magistral y respiración.',
       durationSeconds: 20,
       stages: [
         stage('Charla magistral', 'Asistir charla', 'La persona asiste a una charla magistral. El pulso comienza a aumentar.', 12, {
@@ -127,7 +127,7 @@ export function loadScenarios(): Scenario[] {
       id: 'nd3-escenario-6',
       profileId: 'nd3',
       name: 'ND3 · Escenario 6',
-      description: 'Participar en una reunión de investigación con un grupo diferente y respirar al detectar activación.',
+      description: 'Reunión de investigación y respiración.',
       durationSeconds: 20,
       stages: [
         stage('Reunión de investigación', 'Reunión de Investigación', 'La persona participa en una reunión de su grupo de investigación. Aumenta el ruido ambiente.', 12, {

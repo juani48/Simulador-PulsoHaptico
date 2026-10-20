@@ -142,7 +142,7 @@ function goToCarousel(index: number) {
 <template>
   <div class="app">
     <header class="header">
-      <h1>Valores Contextuales</h1>
+      <h1>Simulador de Valores de Contexto</h1>
       <span class="connection" :class="{ live: !!state }">{{ state ? 'Conectado' : 'Conectando…' }}</span>
     </header>
 

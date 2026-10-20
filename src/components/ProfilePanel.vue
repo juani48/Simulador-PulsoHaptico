@@ -18,7 +18,6 @@ function profileDescription(profile: NeurodivergentProfile): string {
 <template>
   <section class="card profile-card">
     <div class="title">Seleccionar perfil</div>
-    <p class="description">Elegí la persona entrevistada para cargar su configuración en el simulador.</p>
 
     <div class="profiles">
       <label

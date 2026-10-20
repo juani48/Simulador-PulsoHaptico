@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { Scenario, ScenarioStatus, ScenarioValue } from '../types';
+import type { Scenario, ScenarioStatus } from '../types';
 
 const props = defineProps<{
   scenarios: Scenario[];
@@ -26,26 +26,6 @@ watch(() => props.status.paused, paused => {
   if (paused) video.value.pause();
   else void video.value.play();
 });
-const valueLabels: Record<ScenarioValue, string> = {
-  noiseLevel: 'Ruido',
-  pulse: 'Pulso'
-};
-const valueUnits: Record<ScenarioValue, string> = {
-  noiseLevel: 'dB',
-  pulse: 'BPM'
-};
-function scenarioValues(scenario: Scenario) {
-  const values = new Map<ScenarioValue, { minimum: number; maximum: number }>();
-  for (const stage of scenario.stages) {
-    for (const [key, range] of Object.entries(stage.values) as [ScenarioValue, { minimum: number; maximum: number }][]) {
-      const current = values.get(key);
-      values.set(key, current
-        ? { minimum: Math.min(current.minimum, range.minimum), maximum: Math.max(current.maximum, range.maximum) }
-        : range);
-    }
-  }
-  return [...values.entries()];
-}
 </script>
 
 <template>
@@ -58,29 +38,17 @@ function scenarioValues(scenario: Scenario) {
           <img v-if="scenario.previewImage" :src="scenario.previewImage" :alt="`Vista previa de ${scenario.name}`" />
           <span v-else>Sin vista previa</span>
         </div>
-        <div class="scenario-content">
-          <div class="scenario-heading">
-            <h2>{{ scenario.name }}</h2>
-            <span>{{ scenario.durationSeconds }} s</span>
-          </div>
-          <p>{{ scenario.description }}</p>
-          <div class="values-title">Valores a simular</div>
-          <div class="values">
-            <span v-for="[key, range] in scenarioValues(scenario)" :key="key" class="value-chip">
-              {{ valueLabels[key] }}: {{ range.minimum }}–{{ range.maximum }} {{ valueUnits[key] }}
-            </span>
-          </div>
-          <div v-if="scenario.sequenceImages.length" class="sequence">
-            {{ scenario.sequenceImages.length }} imágenes en secuencia
-          </div>
-          <button
-            class="scenario-button"
-            :disabled="loading || status.running"
-            @click="emit('start', scenario.id)"
-          >
-            {{ status.scenarioId === scenario.id && status.running ? 'En ejecución…' : 'Ejecutar escenario' }}
-          </button>
+        <div class="scenario-name">
+          <h2>{{ scenario.name }}</h2>
+          <span>{{ scenario.stages[0]?.activity ?? 'Escenario' }}</span>
         </div>
+        <button
+          class="scenario-button"
+          :disabled="loading || status.running"
+          @click="emit('start', scenario.id)"
+        >
+          {{ status.scenarioId === scenario.id && status.running ? 'En ejecución…' : 'Ejecutar escenario' }}
+        </button>
       </article>
     </div>
     <div v-if="status.running" class="progress active-scenario">
@@ -125,20 +93,44 @@ function scenarioValues(scenario: Scenario) {
 </template>
 
 <style scoped>
-.scenario-card { min-height: 0; }
+.scenario-card { height: 100%; min-height: 0; overflow-y: auto; }
 .scenario-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 10px 16px; padding: 5px 2px; }
-.scenario { display: grid; grid-template-columns: minmax(0, 1fr) 124px; min-width: 0; gap: 10px; padding: 9px; border: 1px solid var(--line); border-radius: 10px; }
-.scenario-preview { display: grid; grid-column: 2; grid-row: 1; place-items: center; width: 124px; height: 94px; border-radius: 8px; background: #0e1428; color: var(--muted); font-size: 11px; text-align: center; overflow: hidden; }
-.scenario-preview img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
-.scenario-content { grid-column: 1; grid-row: 1; min-width: 0; }
-.scenario-heading, .progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-h2 { margin: 0; font-size: 17px; }
-.scenario-heading span, .sequence, .values-title { color: var(--muted); font-size: 12px; }
-p { margin: 5px 0 8px; color: var(--muted); font-size: 12px; }
-.values-title { margin-bottom: 5px; }
-.values { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
-.value-chip { padding: 4px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); font-size: 11px; }
-.scenario-button { border: 0; border-radius: 7px; padding: 6px 10px; color: #07101d; background: var(--accent-2); font-weight: 700; cursor: pointer; }
+.scenario {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.scenario-preview {
+  display: grid;
+  place-items: center;
+  width: 124px;
+  height: 82px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0e1428;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+.scenario-preview img { width: 100%; height: 100%; object-fit: contain; }
+.scenario-name { display: grid; gap: 3px; min-width: 0; }
+h2 { margin: 0; font-size: 15px; line-height: 1.4; }
+.scenario-name span { color: var(--muted); font-size: 13px; }
+.scenario-button {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 10px;
+  color: #07101d;
+  background: var(--accent-2);
+  font-weight: 700;
+  cursor: pointer;
+}
 .scenario-button:disabled { opacity: .5; cursor: not-allowed; }
 .progress { margin-top: 16px; color: var(--muted); font-size: 12px; }
 .active-scenario {
@@ -166,8 +158,9 @@ p { margin: 5px 0 8px; color: var(--muted); font-size: 12px; }
 .empty { color: var(--muted); }
 @media (max-width: 700px) {
   .scenario-list { grid-template-columns: 1fr; }
-  .scenario { grid-template-columns: minmax(0, 1fr) 104px; }
+  .scenario { grid-template-columns: 104px minmax(0, 1fr); }
   .scenario-preview { width: 104px; height: 82px; }
+  .scenario-button { grid-column: 2; justify-self: start; }
   .active-scenario { grid-template-columns: 1fr; }
   .active-media { grid-column: 1; grid-row: 1; }
   .active-details { grid-column: 1; grid-row: 2; }

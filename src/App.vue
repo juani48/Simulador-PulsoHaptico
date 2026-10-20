@@ -150,6 +150,8 @@ function goToCarousel(index: number) {
       <HistoryChart
         :history="history"
         :social-battery="state?.socialBattery ?? 0"
+        :date-time="state?.cellphone.dateTime"
+        :current-activity="scenarioStatus.currentStage?.activity || state?.profile.activities[0]?.name"
       />
       <div class="carousel-shell">
         <div ref="carousel" class="carousel" aria-label="Controles de simulación">
@@ -208,14 +210,22 @@ function goToCarousel(index: number) {
 </template>
 
 <style scoped>
-.app { max-width: 1120px; margin: 0 auto; padding: 24px 28px 48px; }
+.app {
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  height: 100%;
+  margin: 0 auto;
+  padding: 24px 28px;
+  overflow: hidden;
+}
 .header {
   display: flex; align-items: center; justify-content: center; gap: 12px;
   margin-bottom: 22px; padding-bottom: 16px;
   border-bottom: 1.5px solid var(--line);
 }
 .header h1 {
-  font-size: clamp(28px, 4vw, 42px); font-weight: 600;
+  font-size: 15px; font-weight: 600;
   letter-spacing: .08em; margin: 0;
   background: linear-gradient(180deg, #fff, #a9b6da);
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -227,20 +237,35 @@ function goToCarousel(index: number) {
 .connection.live { color: var(--accent-2); }
 
 .grid {
+  min-height: 0;
   display: grid;
-  gap: 22px;
+  grid-template-rows: minmax(300px, 40vh) minmax(0, 1fr);
+  gap: 12px;
   grid-template-columns: 1fr;
 }
+.grid > :first-child {
+  min-height: 0;
+  overflow: hidden;
+}
 .carousel-shell {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
-  height: auto;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
 }
 .carousel {
   display: flex;
+  flex: 1;
   gap: 18px;
-  height: auto;
-  min-height: 560px;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
   overflow: hidden;
   scroll-snap-type: x mandatory;
@@ -250,12 +275,16 @@ function goToCarousel(index: number) {
 }
 .carousel-item {
   flex: 0 0 100%;
-  height: auto;
-  min-height: 560px;
+  min-height: 0;
   min-width: 0;
   scroll-snap-align: start;
 }
+.carousel :deep(.title) {
+  font-size: 15px;
+  text-align: center;
+}
 .carousel-controls {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -308,8 +337,8 @@ function goToCarousel(index: number) {
 }
 
 @media (max-width: 780px) {
-  .app { padding-inline: 14px; }
-  .header h1 { font-size: 25px; }
+  .app { padding: 16px 14px; }
+  .grid { grid-template-rows: minmax(280px, 42vh) minmax(0, 1fr); }
   .data-item { grid-template-columns: 1fr; }
   .carousel-button { padding: 8px 10px; }
 }

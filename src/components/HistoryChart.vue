@@ -13,10 +13,19 @@ ChartJS.register(LineController, LineElement, PointElement,
 const props = defineProps<{
   history: HistoryPoint[];
   socialBattery: number;
+  dateTime?: string;
+  currentActivity?: string;
 }>();
 
 const labels = computed(() => props.history.map(p =>
   new Date(p.t).toLocaleTimeString('es-AR', { hour12: false })));
+const latestTimestamp = computed(() => props.dateTime || props.history.at(-1)?.t);
+const displayDate = computed(() => latestTimestamp.value
+  ? new Date(latestTimestamp.value).toLocaleDateString('es-AR')
+  : '—');
+const displayTime = computed(() => latestTimestamp.value
+  ? new Date(latestTimestamp.value).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  : '—');
 
 const pulseChartData = computed(() => ({
   labels: labels.value,
@@ -63,7 +72,7 @@ const chartOptions = {
   maintainAspectRatio: false,
   animation: { duration: 300 },
   plugins: {
-    legend: { labels: { color: '#cfd8f3' } },
+    legend: { display: false },
     tooltip: { mode: 'index' as const, intersect: false }
   },
   scales: {
@@ -75,6 +84,20 @@ const chartOptions = {
 
 <template>
   <section class="history-dashboard">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="title">Pulso</div>
+        <div class="chart-wrap">
+          <Line :data="pulseChartData" :options="chartOptions" />
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="title">Nivel de ruido</div>
+        <div class="chart-wrap">
+          <Line :data="noiseChartData" :options="chartOptions" />
+        </div>
+      </div>
+    </div>
     <div class="context-strip">
       <div class="context-item social-summary">
         <span class="context-label">Batería social</span>
@@ -97,28 +120,14 @@ const chartOptions = {
       </div>
       <div class="context-item">
         <span class="context-label">Actividad actual</span>
-        <strong>Perfil seleccionado</strong>
-        <small>La configuración se carga desde el perfil elegido</small>
-      </div>
-      <div class="context-item context-action">
-        <span class="context-label">Estado del simulador</span>
-        <strong>Datos en vivo</strong>
-        <span class="context-value">{{ socialBatteryState.percentage }}% de batería social</span>
+        <strong>{{ currentActivity || 'Sin actividad' }}</strong>
       </div>
     </div>
-    <div class="charts-grid">
-      <div class="card chart-card">
-        <div class="title">Pulso</div>
-        <div class="chart-wrap">
-          <Line :data="pulseChartData" :options="chartOptions" />
-        </div>
-      </div>
-      <div class="card chart-card">
-        <div class="title">Nivel de ruido</div>
-        <div class="chart-wrap">
-          <Line :data="noiseChartData" :options="chartOptions" />
-        </div>
-      </div>
+    <div class="date-row">
+      <span class="date-label">Fecha</span>
+      <strong>{{ displayDate }}</strong>
+      <span class="time-label">Hora:</span>
+      <strong>{{ displayTime }}</strong>
     </div>
   </section>
 </template>
@@ -126,23 +135,79 @@ const chartOptions = {
 <style scoped>
 .history-dashboard {
   display: grid;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 18px;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
 }
-.chart-card { height: 250px; display: flex; flex-direction: column; }
-.title { margin-bottom: 12px; }
-.chart-wrap { min-height: 0; flex: 1; }
-.charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.context-strip { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 16px; }
+.chart-card {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 0;
+  border-bottom: 1px solid var(--line);
+}
+.title {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding-left: 4px;
+  font-size: 15px;
+}
+.chart-wrap {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+.chart-wrap :deep(canvas) { display: block; }
+.charts-grid {
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+}
+.context-strip {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+}
 .context-item {
   display: flex; flex-direction: column; justify-content: center; gap: 3px;
-  min-height: 84px; padding: 12px 16px; border-bottom: 1.5px solid var(--line);
+  min-height: 76px; padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(14, 20, 40, .35);
 }
-.context-label { color: var(--muted); font-size: 12px; }
-.context-item strong { font-size: 17px; }
-.context-item small, .context-value { color: var(--muted); font-size: 11px; }
-.social-summary { align-items: center; border-right: 1.5px solid var(--line); }
+.context-label { color: var(--muted); font-size: 11px; }
+.context-item strong { font-size: 15px; }
+.social-summary { align-items: center; }
 .social-face { margin: 4px 0; }
-.context-action { border-left: 1.5px solid var(--line); }
+.date-row {
+  display: grid;
+  grid-column: 1;
+  grid-row: 2;
+  grid-template-columns: 110px auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 4px;
+}
+.date-label, .time-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+.date-row strong { font-size: 15px; font-weight: 500; }
+.time-label { justify-self: end; }
 .social-status {
   display: flex;
   flex: 1;
@@ -153,8 +218,8 @@ const chartOptions = {
   color: var(--muted);
 }
 .social-face {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   overflow: visible;
 }
 .social-face circle:first-child { stroke: rgba(27, 35, 58, .24); stroke-width: 1; }
@@ -167,9 +232,23 @@ const chartOptions = {
 .social-status strong { color: var(--text); font-size: 11px; }
 .social-status span:last-child { font-size: 11px; }
 @media (max-width: 780px) {
-  .context-strip, .charts-grid { grid-template-columns: 1fr; }
-  .context-item { min-height: 64px; border: 0; border-bottom: 1px solid var(--line); }
-  .social-summary, .context-action { border-left: 0; border-right: 0; }
-  .chart-card { height: 220px; }
+  .history-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    row-gap: 4px;
+  }
+  .charts-grid { grid-column: 1; grid-row: 1; }
+  .context-strip {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .context-item { min-height: 58px; }
+  .chart-card { grid-template-columns: 84px minmax(0, 1fr); }
+  .date-row { grid-template-columns: auto 1fr; }
+  .date-row { grid-column: 1; grid-row: 3; }
+  .time-label { justify-self: start; }
 }
 </style>

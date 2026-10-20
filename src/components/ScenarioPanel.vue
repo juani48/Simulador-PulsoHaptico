@@ -84,63 +84,75 @@ function scenarioValues(scenario: Scenario) {
       </article>
     </div>
     <div v-if="status.running" class="progress active-scenario">
-      <video
-        v-if="activeScenario?.videoUrl"
-        ref="video"
-        class="scenario-video"
-        :src="activeScenario.videoUrl"
-        autoplay
-        muted
-        loop
-        playsinline
-      />
-      <img v-else-if="activeSequenceImage" class="active-sequence-image" :src="activeSequenceImage" alt="Paso actual del escenario" />
-      <div v-else class="scenario-video-placeholder">
-        <strong>{{ activeStage?.name ?? 'Escenario' }}</strong>
-        <span>Video pendiente de cargar</span>
+      <div class="active-media">
+        <video
+          v-if="activeScenario?.videoUrl"
+          ref="video"
+          class="scenario-video"
+          :src="activeScenario.videoUrl"
+          autoplay
+          muted
+          loop
+          playsinline
+        />
+        <img v-else-if="activeSequenceImage" class="active-sequence-image" :src="activeSequenceImage" alt="Paso actual del escenario" />
+        <div v-else class="scenario-video-placeholder">
+          <strong>{{ activeStage?.name ?? 'Escenario' }}</strong>
+          <span>Video pendiente de cargar</span>
+        </div>
       </div>
-      <div v-if="activeStage" class="stage-info">
-        <strong>{{ activeStage.activity }}</strong>
-        <span>{{ activeStage.description }}</span>
-      </div>
-      <div class="progress-label">
-        <span>Progreso</span>
-        <span>{{ status.elapsedSeconds }} / {{ status.totalSeconds }} s</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-value" :style="{ width: `${(status.elapsedSeconds / status.totalSeconds) * 100}%` }" />
-      </div>
-      <div class="scenario-actions">
-        <button type="button" class="scenario-button" :disabled="!status.running" @click="emit('pause')">
-          {{ status.paused ? 'Continuar' : 'Pausar' }}
-        </button>
-        <button type="button" class="scenario-exit" @click="emit('stop')">Salir</button>
+      <div class="active-details">
+        <div v-if="activeStage" class="stage-info">
+          <strong>{{ activeStage.activity }}</strong>
+          <span>{{ activeStage.description }}</span>
+        </div>
+        <div class="progress-label">
+          <span>Progreso</span>
+          <span>{{ status.elapsedSeconds }} / {{ status.totalSeconds }} s</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-value" :style="{ width: `${(status.elapsedSeconds / status.totalSeconds) * 100}%` }" />
+        </div>
+        <div class="scenario-actions">
+          <button type="button" class="scenario-button" :disabled="!status.running" @click="emit('pause')">
+            {{ status.paused ? 'Continuar' : 'Pausar' }}
+          </button>
+          <button type="button" class="scenario-exit" @click="emit('stop')">Salir</button>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.scenario-card { min-height: 560px; }
-.scenario-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 14px 22px; padding: 8px 2px; }
-.scenario { display: flex; min-width: 0; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
-.scenario-preview { display: grid; place-items: center; flex: 0 0 150px; height: 108px; border-radius: 8px; background: #0e1428; color: var(--muted); font-size: 11px; text-align: center; overflow: hidden; }
+.scenario-card { min-height: 0; }
+.scenario-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 10px 16px; padding: 5px 2px; }
+.scenario { display: grid; grid-template-columns: minmax(0, 1fr) 124px; min-width: 0; gap: 10px; padding: 9px; border: 1px solid var(--line); border-radius: 10px; }
+.scenario-preview { display: grid; grid-column: 2; grid-row: 1; place-items: center; width: 124px; height: 94px; border-radius: 8px; background: #0e1428; color: var(--muted); font-size: 11px; text-align: center; overflow: hidden; }
 .scenario-preview img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
-.scenario-content { flex: 1; }
+.scenario-content { grid-column: 1; grid-row: 1; min-width: 0; }
 .scenario-heading, .progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 h2 { margin: 0; font-size: 17px; }
 .scenario-heading span, .sequence, .values-title { color: var(--muted); font-size: 12px; }
-p { margin: 7px 0 12px; color: var(--muted); font-size: 13px; }
+p { margin: 5px 0 8px; color: var(--muted); font-size: 12px; }
 .values-title { margin-bottom: 5px; }
-.values { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.values { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
 .value-chip { padding: 4px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); font-size: 11px; }
-.scenario-button { border: 0; border-radius: 7px; padding: 8px 12px; color: #07101d; background: var(--accent-2); font-weight: 700; cursor: pointer; }
+.scenario-button { border: 0; border-radius: 7px; padding: 6px 10px; color: #07101d; background: var(--accent-2); font-weight: 700; cursor: pointer; }
 .scenario-button:disabled { opacity: .5; cursor: not-allowed; }
 .progress { margin-top: 16px; color: var(--muted); font-size: 12px; }
+.active-scenario {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .9fr);
+  gap: 18px;
+  align-items: center;
+}
+.active-media { grid-column: 2; grid-row: 1; min-width: 0; }
+.active-details { grid-column: 1; grid-row: 1; min-width: 0; }
 .progress-track { height: 6px; margin-top: 7px; overflow: hidden; border-radius: 4px; background: #0e1428; }
 .progress-value { height: 100%; border-radius: inherit; background: var(--accent-2); transition: width .3s; }
-.active-sequence-image { display: block; width: 100%; max-height: min(34vw, 360px); aspect-ratio: 16 / 9; margin-bottom: 10px; border-radius: 8px; background: #0e1428; object-fit: contain; }
-.scenario-video, .scenario-video-placeholder { display: block; width: 100%; max-height: min(34vw, 360px); aspect-ratio: 16 / 9; margin-bottom: 10px; border-radius: 8px; }
+.active-sequence-image { display: block; width: 100%; max-height: min(34vw, 360px); aspect-ratio: 16 / 9; border-radius: 8px; background: #0e1428; object-fit: contain; }
+.scenario-video, .scenario-video-placeholder { display: block; width: 100%; max-height: min(34vw, 360px); aspect-ratio: 16 / 9; border-radius: 8px; }
 .scenario-video { background: #0e1428; object-fit: contain; }
 .scenario-video-placeholder { display: grid; place-items: center; align-content: center; gap: 5px; background: #0e1428; color: var(--muted); }
 .scenario-video-placeholder strong { color: var(--text); font-size: 18px; }
@@ -154,8 +166,11 @@ p { margin: 7px 0 12px; color: var(--muted); font-size: 13px; }
 .empty { color: var(--muted); }
 @media (max-width: 700px) {
   .scenario-list { grid-template-columns: 1fr; }
-  .scenario { flex-direction: column; }
-  .scenario-preview { flex-basis: auto; width: 100%; height: 150px; }
+  .scenario { grid-template-columns: minmax(0, 1fr) 104px; }
+  .scenario-preview { width: 104px; height: 82px; }
+  .active-scenario { grid-template-columns: 1fr; }
+  .active-media { grid-column: 1; grid-row: 1; }
+  .active-details { grid-column: 1; grid-row: 2; }
   .carousel-item, .carousel { min-height: 0; }
   .scenario-card { min-height: 0; }
 }

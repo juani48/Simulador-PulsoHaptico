@@ -7,6 +7,12 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ select: [profileId: string] }>();
+
+function profileDescription(profile: NeurodivergentProfile): string {
+  const regulation = profile.regulation.mode === 'prevention' ? 'Prevención' : 'Regulación';
+  const sensitivity = profile.dysregulators[0]?.replace('Ruido emergente del ambiente', 'ruido') ?? 'entorno';
+  return `${regulation} · Sensible a ${sensitivity.toLowerCase()}`;
+}
 </script>
 
 <template>
@@ -30,20 +36,9 @@ const emit = defineEmits<{ select: [profileId: string] }>();
         />
         <span>
           <strong>{{ profile.name }}</strong>
-          <small>Home: {{ profile.homeConfig }}<template v-if="profile.homeMessage"> · “{{ profile.homeMessage }}”</template></small>
+          <small>{{ profileDescription(profile) }}<template v-if="profile.homeMessage"> · {{ profile.homeMessage }}</template></small>
         </span>
       </label>
-    </div>
-
-    <div v-if="props.profiles.find(profile => profile.id === selectedProfileId)" class="profile-summary">
-      <template v-for="profile in props.profiles.filter(item => item.id === selectedProfileId)" :key="profile.id">
-        <div class="summary-grid">
-          <div><span>Regulación</span><strong>{{ profile.regulation.mode }}</strong></div>
-        </div>
-        <div class="profile-section"><strong>Desreguladores</strong><span>{{ profile.dysregulators.join(' · ') }}</span></div>
-        <div class="profile-section"><strong>Estrategias</strong><span>{{ profile.regulation.strategies.join(' · ') }}</span></div>
-        <div class="profile-section"><strong>Actividades</strong><span>{{ profile.activities.length }} cargadas</span></div>
-      </template>
     </div>
   </section>
 </template>
@@ -57,12 +52,5 @@ const emit = defineEmits<{ select: [profileId: string] }>();
 .profile input { margin-top: 3px; accent-color: var(--accent-2); }
 .profile span { display: grid; gap: 4px; }
 .profile strong { color: var(--text); }
-.profile small, .profile-section span { color: var(--muted); font-size: 12px; }
-.profile-summary { display: grid; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
-.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.summary-grid div { display: grid; gap: 4px; }
-.summary-grid span, .profile-section strong { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
-.summary-grid strong { font-size: 13px; }
-.profile-section { display: grid; gap: 5px; }
-@media (max-width: 600px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+.profile small { color: var(--muted); font-size: 12px; }
 </style>

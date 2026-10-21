@@ -92,7 +92,6 @@ watch(() => props.status.paused, paused => {
           <span>{{ activeStage.description }}</span>
         </div>
         <div class="progress-label">
-          <span>Progreso</span>
           <span>{{ status.elapsedSeconds }} / {{ status.totalSeconds }} s</span>
         </div>
         <div class="progress-track">

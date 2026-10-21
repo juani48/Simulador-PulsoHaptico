@@ -213,7 +213,6 @@ class Simulator {
       if (key === 'pulse') nextState.sensor.pulse = value;
     }
 
-    nextState.cellphone.dateTime = new Date().toISOString();
     this.state = nextState;
     this.recordState();
   }
@@ -234,7 +233,6 @@ class Simulator {
       if (key === 'pulse') nextState.sensor.pulse = value;
       if (key === 'noiseLevel') nextState.cellphone.noiseLevel = value;
     }
-    nextState.cellphone.dateTime = new Date().toISOString();
     this.state = nextState;
     this.recordState();
   }
